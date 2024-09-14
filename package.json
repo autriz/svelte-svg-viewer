@@ -1,7 +1,7 @@
 {
 	"name": "svelte-svg-viewer",
 	"description": "A component for displaying something big in a small (or not) space.",
-	"version": "0.1.0",
+	"version": "0.1.1",
 	"license": "MIT",
 	"repository": "github:autriz/svelte-svg-viewer",
 	"scripts": {
