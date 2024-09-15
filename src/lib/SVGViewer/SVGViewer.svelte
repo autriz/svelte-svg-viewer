@@ -134,8 +134,6 @@
 						$positionState.y,
 					),
 				);
-
-				console.log($positionState, {x: newX, y: newY});
 	
 				methods.panTo(newX, newY);
 	
@@ -201,8 +199,6 @@
 			};
 
 			$initialViewerSize = $viewerSize;
-
-			// console.log(initialHeight, initialWidth);
 
 			// check if viewer is bigger than container
 			// also check for a adaptive container size (always 0 at the start)

@@ -934,9 +934,6 @@ export function createViewer(props: CreateSVGViewerProps) {
 		const scaledContainerWidth = containerRect.width * scaleDiff;
 		const scaledContainerHeight = containerRect.height * scaleDiff;
 
-		console.log(`[height] current: ${containerRect.height}, scaled: ${scaledContainerHeight}, viewer: ${viewerRect.height}`);
-		console.log(`[width] current: ${containerRect.width}, scaled: ${scaledContainerWidth}, viewer: ${viewerRect.width}`);
-
 		if (
 			$lockToBoundaries &&
 			(scaledContainerWidth < viewerRect.width ||
@@ -1024,26 +1021,18 @@ export function createViewer(props: CreateSVGViewerProps) {
 		const initialContainerWidth = containerWidth / $scale;
 
 		// calculate scale that needed to be set to fit container in the window
-
-		console.log(`[height] container: ${containerHeight}, initial: ${initialContainerHeight}`);
-		console.log(`[width] container: ${containerWidth}, initial: ${initialContainerWidth}`);
-		console.log(viewerHeight / containerHeight, viewerWidth / containerWidth);
-
 		const scaleY = viewerHeight / initialContainerHeight;
 		const scaleX = viewerWidth / initialContainerWidth;
 		
 		let newScale: number;
 
 		if ($lockToBoundaries) {
-			// newScale = Math.min(scaleY, scaleX);
 			newScale = [scaleX, scaleY].reduce((prev, curr) => 
   				(Math.abs(curr - 1) < Math.abs(prev - 1) ? curr : prev));
 		} else {
 			// if not locked this should do the trick
 			newScale = (scaleY + scaleX) / 2;
 		}
-
-		console.log(`${newScale}, [width]${scaleX}, [height]${scaleY}`);
 
 		if (!forceScale) {
 			newScale = Math.max(minScale, Math.min(maxScale, newScale));
