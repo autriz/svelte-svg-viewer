@@ -76,7 +76,7 @@ Also component has afterMount prop that we can use to call methods right after c
 </SVGViewer>
 ```
 
-To see the rest go to [this file](https://github.com/autriz/svelte-svg-viewer/src/lib/SVGViewer/types.ts)
+To see the rest go to [this file](https://github.com/autriz/svelte-svg-viewer/blob/master/src/lib/SVGViewer/types.ts)
 
 # Methods
 
