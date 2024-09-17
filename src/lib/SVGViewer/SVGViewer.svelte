@@ -164,17 +164,19 @@
 				//     height = initialHeight > scaledContainerSize.height ? scaledContainerSize.height : initialHeight;
 
 				// TODO: maybe resizeBehavior prop?
-				if (
-					viewerRect.width > containerRect.width &&
-					containerRect.width !== 0
-				)
-					width = containerRect.width;
-				if (
-					viewerRect.height > containerRect.height &&
-					containerRect.height !== 0
-				)
-					height = containerRect.height;
-	
+				if ($lockToBoundariesState) {
+					if (
+						viewerRect.width > containerRect.width &&
+						containerRect.width !== 0
+					)
+						width = containerRect.width;
+
+					if (
+						viewerRect.height > containerRect.height &&
+						containerRect.height !== 0
+					)
+						height = containerRect.height;
+				}
 
 				if (viewerRect.width > containerRect.width)
 					methods.zoomOnCenter(
@@ -203,16 +205,19 @@
 			// check if viewer is bigger than container
 			// also check for a adaptive container size (always 0 at the start)
 			// TODO (maybe): modes `shrink to fit`/`zoom to fit`, now it works in `shrink to fit` mode only
-			if (
-				viewerRect.width > containerRect.width &&
-				containerRect.width !== 0
-			)
-				width = containerRect.width;
-			if (
-				viewerRect.height > containerRect.height &&
-				containerRect.height !== 0
-			)
-				height = containerRect.height;
+			if ($lockToBoundariesState) {
+				if (
+					viewerRect.width > containerRect.width &&
+					containerRect.width !== 0
+				)
+					width = containerRect.width;
+
+				if (
+					viewerRect.height > containerRect.height &&
+					containerRect.height !== 0
+				)
+					height = containerRect.height;
+			}
 
 			resizeObserver?.observe($containerRef);
 			resizeObserver?.observe($viewerRef);
