@@ -334,8 +334,55 @@ export type CreateSVGViewerProps = {
 	 * @default undefined 
 	 */
 	actionKey?: Writable<Key>;
-	/** @todo in development | zoomDrag works hella wonky */
-	pinchBehavior?: PinchBehavior;
+	/** 
+	 * The uncontrolled default value for pinch behavior.
+	 * 
+	 * Pinch behavior has two modes: zoom only and zoom drag. Zoom only allows 
+	 * for zooming while pinching and zoom drag allows for both zooming and dragging.
+	 * 
+	 * For more control use `pinchBehavior` prop.
+	 * 
+	 * @example
+	 * ```svelte
+	 * <script>
+	 * 	import { SVGViewer } from "svelte-svg-viewer";
+	 * 
+	 * 	let defaultPinchBehavior = "zoomOnly";
+	 * </script>
+	 * 
+	 * <SVGViewer {defaultPinchBehavior}>
+	 * 	...
+	 * </SVGViewer>
+	 * ```
+	 * 
+	 * @default "zoomOnly"
+	 */
+	defaultPinchBehavior?: PinchBehavior;
+	/** 
+	 * The controlled value store for pinch behavior.
+	 * 
+	 * Pinch behavior has two modes: zoom only and zoom drag. Zoom only allows 
+	 * for zooming while pinching and zoom drag allows for both zooming and dragging.
+	 * 
+	 * For less control use `defaultPinchBehavior` prop.
+	 * 
+	 * @example
+	 * ```svelte
+	 * <script>
+	 * 	import { writable } from "svelte/store";
+	 * 	import { SVGViewer } from "svelte-svg-viewer";
+	 * 
+	 * 	let pinchBehavior = writable("zoomOnly");
+	 * </script>
+	 * 
+	 * <SVGViewer {pinchBehavior}>
+	 * 	...
+	 * </SVGViewer>
+	 * ```
+	 * 
+	 * @default undefined 
+	 */
+	pinchBehavior?: Writable<PinchBehavior>;
 };
 
 const defaultProps = {
@@ -353,7 +400,8 @@ const defaultProps = {
 	lockToBoundaries: undefined,
 	defaultActionKey: undefined,
 	actionKey: undefined,
-	pinchBehavior: "zoomOnly",
+	defaultPinchBehavior: "zoomOnly",
+	pinchBehavior: undefined,
 } as const;
 
 const omittedOptions = [
@@ -362,7 +410,7 @@ const omittedOptions = [
 	"ignoreScale",
 	"scale",
 	"actionKey",
-	"pinchBehavior", // TODO: remove when done
+	"pinchBehavior"
 ] as const;
 
 export function createViewer(props: CreateSVGViewerProps) {
@@ -377,7 +425,6 @@ export function createViewer(props: CreateSVGViewerProps) {
 
 	// export let bracketWidth: number;
 	// export let bracketHeight: number;
-	let pinchBehavior = withDefaults.pinchBehavior;
 	let minScale: number = withDefaults.minScale;
 	let maxScale: number = withDefaults.maxScale;
 	let scaleMouseSensitivity = withDefaults.scaleMouseSensitivity;
@@ -390,6 +437,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 	const lockToBoundariesStore =
 		withDefaults.lockToBoundaries ?? options.defaultLockToBoundaries;
 	const actionKeyStore = withDefaults.actionKey ?? options.defaultActionKey;
+	const pinchBehaviorStore = withDefaults.pinchBehavior ?? options.defaultPinchBehavior;
 
 	// possibly useless functions
 	let onLockChange: ChangeFn<boolean> = ({ curr, next }) => {
@@ -615,6 +663,15 @@ export function createViewer(props: CreateSVGViewerProps) {
 			const touch2Pos = { x: touch2.clientX, y: touch2.clientY };
 
 			lastDistance = getPinchDistance(touch1Pos, touch2Pos);
+
+			if (get(pinchBehaviorStore) == "zoomDrag") {
+				const newOffset = getPinchCenter(touch1Pos, touch2Pos);
+		
+				offset = {
+					x: newOffset.x - $position.x,
+					y: newOffset.y - $position.y,
+				};
+			}
 			
 			if (event.cancelable) event.preventDefault();
 		} else {
@@ -656,6 +713,8 @@ export function createViewer(props: CreateSVGViewerProps) {
 		let newX = newPosition.x - offset.x;
 		let newY = newPosition.y - offset.y;
 
+		console.log({newX, newY}, newPosition, offset);
+
 		panTo(newX, newY);
 
 		if (event.cancelable) event.preventDefault();
@@ -686,8 +745,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 		const distance = getPinchDistance(touch1Pos, touch2Pos);
 		
 		const $scale = get(scale);
-		const $position = get(position);
-		const $lockToBoundaries = get(lockToBoundaries);
+		const $pinchBehavior = get(pinchBehaviorStore);
 
 		if (!lastDistance) {
 			lastDistance = distance;
@@ -697,70 +755,29 @@ export function createViewer(props: CreateSVGViewerProps) {
 
 		if ($scale == newScale) return;
 
+		const scaleDiff = newScale / $scale;
+
 		const containerRect = $containerRef.getBoundingClientRect();
 		const viewerRect = $viewerRef.getBoundingClientRect();
+
+		const initialContainerHeight = containerRect.height * scaleDiff;
+		const initialContainerWidth = containerRect.width * scaleDiff;
 		// FIXME: ignoreScale
 		if (
-			$scale * newScale <= maxScale &&
-			$scale * newScale >= minScale &&
-			containerRect.width * (newScale / $scale) > viewerRect.width &&
-			containerRect.height * (newScale / $scale) > viewerRect.height
+			newScale <= maxScale &&
+			newScale >= minScale &&
+			initialContainerWidth > viewerRect.width &&
+			initialContainerHeight > viewerRect.height
 		) {
 			// FIXME: when you start to zoom, position shifts unexpectedly
-			if (pinchBehavior === "zoomDrag") {
-				const pointTo = {
-					x: (newCenter.x - $position.x) / $scale,
-					y: (newCenter.y - $position.y) / $scale,
-				};
+			if ($pinchBehavior === "zoomDrag") {
+				let newX = newCenter.x - lastCenter.x;
+				let newY = newCenter.y - lastCenter.y;
 
-				const dx = newCenter.x - lastCenter.x;
-				const dy = newCenter.y - lastCenter.y;
-
-				scale.set(newScale);
-
-				position.update(($position) => {
-					// let newX = newCenter.x - pointTo.x * newScale + dx;
-					// let newY = newCenter.y - pointTo.y * newScale + dy;
-					let newX = (newCenter.x - pointTo.x) * newScale;
-					let newY = (newCenter.y - pointTo.y) * newScale;
-					if ($lockToBoundaries) {
-						//FIXME: right-bottom corner jumps when zooming in
-						//FIXME: when starting zooming container jumps
-						newX = Math.min(
-							0,
-							Math.max(
-								newX,
-								-(
-									containerRect.width *
-										(newScale / $scale) -
-									viewerRect.width
-								),
-							),
-						);
-						newY = Math.min(
-							0,
-							Math.max(
-								newY,
-								-(
-									containerRect.height *
-										(newScale / $scale) -
-									viewerRect.height
-								),
-							),
-						);
-					}
-
-					if ($position.x == newX && $position.y == newY)
-						return $position;
-
-					return {
-						x: newX,
-						y: newY,
-					};
-				});
+				zoom(newCenter.x, newCenter.y, newScale);
+				pan(newX * scaleDiff, newY * scaleDiff);
 			}
-
-			if (pinchBehavior === "zoomOnly") {
+			else if ($pinchBehavior === "zoomOnly") {
 				zoom(newCenter.x, newCenter.y, newScale);
 			}
 
@@ -1091,6 +1108,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 			scale,
 			lockToBoundaries,
 			isMoving,
+			pinchBehavior: pinchBehaviorStore,
 		},
 		listeners: {
 			onMouseDown,

@@ -322,6 +322,53 @@ export type Props = {
 	 * @default undefined 
 	 */
 	actionKey?: CreateSVGViewerProps["actionKey"] & {};
-	/** @todo in development | zoomDrag works hella wonky */
+	/** 
+	 * The uncontrolled default value for pinch behavior.
+	 * 
+	 * Pinch behavior has two modes: zoom only and zoom drag. Zoom only allows 
+	 * for zooming while pinching and zoom drag allows for both zooming and dragging.
+	 * 
+	 * For more control use `pinchBehavior` prop.
+	 * 
+	 * @example
+	 * ```svelte
+	 * <script>
+	 * 	import { SVGViewer } from "svelte-svg-viewer";
+	 * 
+	 * 	let defaultPinchBehavior = "zoomOnly";
+	 * </script>
+	 * 
+	 * <SVGViewer {defaultPinchBehavior}>
+	 * 	...
+	 * </SVGViewer>
+	 * ```
+	 * 
+	 * @default "zoomOnly"
+	 */
+	defaultPinchBehavior?: CreateSVGViewerProps["defaultPinchBehavior"] & {};
+	/** 
+	 * The controlled value store for pinch behavior.
+	 * 
+	 * Pinch behavior has two modes: zoom only and zoom drag. Zoom only allows 
+	 * for zooming while pinching and zoom drag allows for both zooming and dragging.
+	 * 
+	 * For less control use `defaultPinchBehavior` prop.
+	 * 
+	 * @example
+	 * ```svelte
+	 * <script>
+	 * 	import { writable } from "svelte/store";
+	 * 	import { SVGViewer } from "svelte-svg-viewer";
+	 * 
+	 * 	let pinchBehavior = writable("zoomOnly");
+	 * </script>
+	 * 
+	 * <SVGViewer {pinchBehavior}>
+	 * 	...
+	 * </SVGViewer>
+	 * ```
+	 * 
+	 * @default undefined 
+	 */
 	pinchBehavior?: CreateSVGViewerProps["pinchBehavior"] & {};
 };
