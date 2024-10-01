@@ -615,6 +615,8 @@ export function createViewer(props: CreateSVGViewerProps) {
 			const touch2Pos = { x: touch2.clientX, y: touch2.clientY };
 
 			lastDistance = getPinchDistance(touch1Pos, touch2Pos);
+			
+			if (event.cancelable) event.preventDefault();
 		} else {
 			const newOffset = getTouchPosition(event, $viewerRef);
 	
@@ -625,8 +627,6 @@ export function createViewer(props: CreateSVGViewerProps) {
 	
 			hasPointerDown = true;
 		}
-
-		if (event.cancelable) event.preventDefault();
 	}
 
 	function onTouchMove(event: SvelteEvent<TouchEvent, SVGElement>) {

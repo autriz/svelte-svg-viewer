@@ -262,14 +262,14 @@
 		on:wheel|preventDefault={onWheel}
 		on:touchstart={onTouchStart}
 		on:touchmove={onTouchMove}
-		on:touchend|preventDefault={onTouchEnd}
+		on:touchend={onTouchEnd}
 		on:touchcancel|preventDefault={onTouchEnd}
 	>
 		<rect x={0} y={0} {width} {height} style="pointer-events: none;" />
 		<g
 			bind:this={$containerRef}
 			transform="translate({$positionState.x} {$positionState.y}), scale({$scaleState})"
-			style={$isMoving ? "pointer-events: none; touch-action: none;" : ""}
+			style={$isMoving ? "pointer-events: none;" : ""}
 		>
 			<slot />
 		</g>
