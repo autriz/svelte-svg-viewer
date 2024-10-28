@@ -2,17 +2,21 @@
 	import { AlertCircle, Check, Copy } from "lucide-svelte";
 	import { fly } from "svelte/transition";
 
-	export let text: string;
-	let className: HTMLButtonElement["className"] = "";
+	interface Props {
+		text: string;
+		class?: HTMLButtonElement["className"];
+	}
 
-	export { className as class };
+	let { text, class: className = "" }: Props = $props();
+
+	
 
 	enum CopyStatus {
 		COPIED,
 		FAILED,
 	}
 
-	let copyStatus: CopyStatus | null = null;
+	let copyStatus: CopyStatus | null = $state(null);
 	let copyTimeout: ReturnType<typeof setTimeout>;
 
 	function copyInstallCommand() {
@@ -32,7 +36,7 @@
 </script>
 
 <button
-	on:click={copyInstallCommand}
+	onclick={copyInstallCommand}
 	class={className}
 	aria-label="Copy button"
 >

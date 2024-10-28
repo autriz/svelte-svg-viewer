@@ -1,9 +1,13 @@
 <script lang="ts">
 	import type { HTMLAttributes } from "svelte/elements";
 
-	let className: HTMLAttributes<SVGElement>["class"] = "";
+        interface Props {
+                class?: HTMLAttributes<SVGElement>["class"];
+        }
 
-	export { className as class };
+        let { class: className = "" }: Props = $props();
+
+	
 </script>
 
 <svg class={className} xmlns="http://www.w3.org/2000/svg" viewBox="0 0 98 96">

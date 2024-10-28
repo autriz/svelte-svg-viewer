@@ -1,6 +1,8 @@
 <script lang="ts">
 	import "./styles.css";
 	import { ModeWatcher } from "mode-watcher";
+
+	let { children } = $props();
 </script>
 
 <svelte:head>
@@ -14,6 +16,6 @@
 />
 
 <div class="h-fit min-h-screen w-screen bg-background text-foreground overflow-auto">
-	<slot />
+	{@render children?.()}
 </div>
 

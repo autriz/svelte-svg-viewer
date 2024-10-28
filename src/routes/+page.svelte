@@ -5,31 +5,26 @@
 	import type { SVGViewerMethods } from "$lib/internal/types.js";
 	import GithubMark from "$components/GithubMark.svelte";
 	import CopyButton from "$components/CopyButton.svelte";
-	import { browser, dev } from "$app/environment";
+	import { dev } from "$app/environment";
 	import { Moon, Sun } from "lucide-svelte";
 	import { setMode, mode } from "mode-watcher";
 
-	let methods: SVGViewerMethods;
-	let heroEl: HTMLDivElement;
-
-	let mounted = false;
-
-	let isFirstTimeLoad = false;
-
-	if (browser) {
-		const firstTimeLoad = sessionStorage.getItem("firstTimeLoad");
-
-		isFirstTimeLoad = !firstTimeLoad ? true : false;
-
-		if (isFirstTimeLoad) {
-			sessionStorage.setItem("firstTimeLoad", "done");
-		}
-	}
+	let methods: SVGViewerMethods | undefined = $state(undefined);
+	let heroEl: HTMLDivElement | undefined = $state(undefined);
+	let mounted = $state(false);
+	let isFirstTimeLoad = $state(false);
 
 	onMount(() => {
 		mounted = true;
 		
-		if (isFirstTimeLoad) heroEl.classList.add("hero-animated");
+		const firstTimeLoad = sessionStorage.getItem("firstTimeLoad");
+	
+		isFirstTimeLoad = !firstTimeLoad ? true : false;
+
+		if (isFirstTimeLoad) {
+			sessionStorage.setItem("firstTimeLoad", "done");
+			heroEl?.classList.add("hero-animated");
+		}
 	});
 </script>
 
@@ -49,7 +44,7 @@
 				class="flex h-full w-full flex-col items-center justify-center"
 				bind:this={heroEl}
 			>
-				<div class="grow" />
+				<div class="grow"></div>
 				<div class="flex flex-col items-center justify-center">
 					<h1 class="text-5xl">Svelte SVG Viewer</h1>
 					<p class="mt-2 text-lg text-secondary-foreground/80">
@@ -87,7 +82,7 @@
 				<footer class="z-10 flex flex-row gap-4">
 					<button
 						class="z-10 mb-5"
-						on:click={() => { $mode === "dark" ? setMode("light") : setMode("dark") }}
+						onclick={() => { $mode === "dark" ? setMode("light") : setMode("dark") }}
 					>
 						{#if $mode === "dark"}
 							<div
@@ -117,13 +112,13 @@
 	<div class="absolute bottom-0 right-0 flex w-fit flex-col gap-2 p-3 z-10">
 		<button
 			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent"
-			on:click={() => methods.fitToViewer()}
+			onclick={() => methods?.fitToViewer()}
 		>
 			.fitToViewer()
 		</button>
 		<button
 			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent"
-			on:click={() => methods.fitSelection(40, 40, 200, 200)}
+			onclick={() => methods?.fitSelection(40, 40, 200, 200)}
 		>
 			.fitToSelection(40, 40, 200, 200)
 		</button>

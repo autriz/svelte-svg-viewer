@@ -2,7 +2,7 @@
 	import { onMount } from "svelte";
 	import type { HTMLAttributes } from "svelte/elements";
 	import { writable } from "svelte/store";
-	import type { SVGViewerMethods } from "$lib/internal/types.js";
+	import type { SvelteEvent, SVGViewerMethods } from "$lib/internal/types.js";
 	import { overridable } from "$lib/internal/index.js";
 	import { setCtx } from "./ctx.js";
 	import type { Props } from "./types.js";
@@ -10,7 +10,35 @@
 	type TypedUnit =
 		`${number}${"em" | "rem" | "pt" | "%" | "px" | "vw" | "vh" | "lvw" | "lvh" | "dvw" | "dvh"}`;
 
-	type $$Props = Props & {
+	let {
+		class: className = "",
+		svgClass: svgClassName = "",
+		style = "",
+		height = $bindable(500),
+		width = $bindable(500),
+		defaultPosition = { x: 0, y: 0 },
+		position = undefined,
+		maxScale = undefined,
+		minScale = undefined,
+		defaultIgnoreScale = false,
+		ignoreScale = undefined,
+		defaultScale = 1,
+		scale = undefined,
+		scaleMouseSensitivity = undefined,
+		scaleTouchpadSensitivity = undefined,
+		defaultLockToBoundaries = false,
+		lockToBoundaries = undefined,
+		defaultActionKey = undefined,
+		actionKey = undefined,
+		pinchBehavior = undefined,
+		defaultPinchBehavior = undefined,
+		afterMount = undefined,
+		methods = $bindable(),
+		children
+	}: Props & {
+		class?: HTMLAttributes<HTMLDivElement>["class"];
+		svgClass?: HTMLAttributes<SVGElement>["class"];
+		style?: HTMLAttributes<HTMLDivElement>["style"];
 		/** 
 		 * Height of the viewer 
 		 * 
@@ -23,40 +51,10 @@
 		 * @default 500
 		 */
 		width?: number | string | TypedUnit;
-		class?: HTMLAttributes<HTMLDivElement>["class"];
-		svgClass?: HTMLAttributes<SVGElement>["class"];
-		style?: HTMLAttributes<HTMLDivElement>["style"];
 		afterMount?: (methods: SVGViewerMethods) => void;
-	};
-
-	let className: $$Props["class"] = "";
-	let svgClassName: $$Props["svgClass"] = "";
-	export let style: $$Props["style"] = "";
-	export let height: $$Props["height"] = 500;
-	export let width: $$Props["width"] = 500;
-	export let defaultPosition: $$Props["defaultPosition"] = { x: 0, y: 0 };
-	export let position: $$Props["position"] = undefined;
-	export let maxScale: $$Props["maxScale"] = undefined;
-	export let minScale: $$Props["minScale"] = undefined;
-	export let defaultIgnoreScale: $$Props["defaultIgnoreScale"] = false;
-	export let ignoreScale: $$Props["ignoreScale"] = undefined;
-	export let defaultScale: $$Props["defaultScale"] = 1;
-	export let scale: $$Props["scale"] = undefined;
-	export let scaleMouseSensitivity: $$Props["scaleMouseSensitivity"] =
-		undefined;
-	export let scaleTouchpadSensitivity: $$Props["scaleTouchpadSensitivity"] =
-		undefined;
-	export let defaultLockToBoundaries: $$Props["defaultLockToBoundaries"] = false;
-	export let lockToBoundaries: $$Props["lockToBoundaries"] = undefined;
-	export let defaultActionKey: $$Props["defaultActionKey"] = undefined;
-	export let actionKey: $$Props["actionKey"] = undefined;
-	/** TODO */
-	export let pinchBehavior: $$Props["pinchBehavior"] = undefined;
-	export let afterMount: $$Props["afterMount"] = undefined;
-	// export let bracketWidth: number;
-	// export let bracketHeight: number;
-	export { className as class };
-	export { svgClassName as svgClass };
+		methods?: SVGViewerMethods;
+		children?: import('svelte').Snippet;
+	} = $props();
 
 	let {
 		states: {
@@ -93,10 +91,11 @@
 		lockToBoundaries,
 		defaultActionKey,
 		actionKey,
+		defaultPinchBehavior,
 		pinchBehavior,
 	});
 
-	export const methods = _methods;
+	methods = _methods;
 
 	const viewerSize = overridable(
 		writable({ height: 0, width: 0 })
@@ -108,6 +107,14 @@
 
 	/** Converts value to '{value}px' if value is an integer, leaves as it is otherwise */
 	const formatValue = (value: string | number | undefined) => Number.isInteger(value) ? `${value}px` : value;
+
+	function preventDefault<T extends Event, U extends EventTarget>(fn: (ev: SvelteEvent<T, U>) => void) {
+		return function(this: ThisType<T>, event: SvelteEvent<T, U>) {
+			event.preventDefault();
+
+			fn.call(this, event);
+		};
+	}
 
 	onMount(() => {
 		resizeObserver = resizeObserver && new ResizeObserver((entries) => {
@@ -227,13 +234,17 @@
 			throw new Error(`Missing reference to container or/and viewer`);
 		};
 
+		// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#using_passive_listeners
+		$viewerRef.addEventListener("touchstart", onTouchStart as any, { passive: false });
+		$viewerRef.addEventListener("touchmove", onTouchMove as any, { passive: false });
+
 		return () => {
 			resizeObserver?.disconnect();
 		};
 	});
 </script>
 
-<svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />
+<svelte:window onkeydown={onKeyDown} onkeyup={onKeyUp} />
 
 <div
 	class={className}
@@ -248,22 +259,20 @@
 
         Don't think I can find workaround for that issue
     -->
-	<!-- svelte-ignore a11y-no-static-element-interactions -->
-	<!-- svelte-ignore a11y-click-events-have-key-events -->
+	<!-- svelte-ignore a11y_no_static_element_interactions -->
+	<!-- svelte-ignore a11y_click_events_have_key_events -->
 	<svg
 		class={svgClassName}
 		{width}
 		{height}
 		bind:this={$viewerRef}
-		on:mousedown={onMouseDown}
-		on:mousemove={onMouseMove}
-		on:mouseup={onMouseUp}
-		on:mouseleave|preventDefault={onMouseUp}
-		on:wheel|preventDefault={onWheel}
-		on:touchstart={onTouchStart}
-		on:touchmove={onTouchMove}
-		on:touchend={onTouchEnd}
-		on:touchcancel|preventDefault={onTouchEnd}
+		onmousedown={onMouseDown}
+		onmousemove={onMouseMove}
+		onmouseup={onMouseUp}
+		onmouseleave={preventDefault(onMouseUp)}
+		onwheel={preventDefault(onWheel)}
+		ontouchend={onTouchEnd}
+		ontouchcancel={preventDefault(onTouchEnd)}
 	>
 		<rect x={0} y={0} {width} {height} style="pointer-events: none;" />
 		<g
@@ -271,7 +280,7 @@
 			transform="translate({$positionState.x} {$positionState.y}), scale({$scaleState})"
 			style={$isMoving ? "pointer-events: none;" : ""}
 		>
-			<slot />
+			{@render children?.()}
 		</g>
 	</svg>
 </div>

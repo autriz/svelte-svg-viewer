@@ -261,7 +261,9 @@ export function createViewer(props: CreateSVGViewerProps) {
 		if (event.cancelable) event.preventDefault();
 	}
 
-	function onMouseUp(_event: SvelteEvent<MouseEvent, SVGElement>) {
+	function onMouseUp(event: SvelteEvent<MouseEvent, SVGElement>) {
+		event.preventDefault()
+
 		const $viewerRef = get(viewerRef);
 		const $containerRef = get(containerRef);
 
@@ -273,6 +275,8 @@ export function createViewer(props: CreateSVGViewerProps) {
 	}
 
 	function onWheel(event: SvelteEvent<WheelEvent, SVGElement>) {
+		event.preventDefault();
+
 		const $viewerRef = get(viewerRef);
 		const $containerRef = get(containerRef);
 		const oldScale = get(scale);
@@ -360,8 +364,6 @@ export function createViewer(props: CreateSVGViewerProps) {
 
 		let newX = newPosition.x - offset.x;
 		let newY = newPosition.y - offset.y;
-
-		console.log({newX, newY}, newPosition, offset);
 
 		panTo(newX, newY);
 
