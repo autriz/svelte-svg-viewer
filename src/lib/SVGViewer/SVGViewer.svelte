@@ -34,26 +34,26 @@
 		defaultPinchBehavior = undefined,
 		afterMount = undefined,
 		methods = $bindable(),
-		children
+		children,
 	}: Props & {
 		class?: HTMLAttributes<HTMLDivElement>["class"];
 		svgClass?: HTMLAttributes<SVGElement>["class"];
 		style?: HTMLAttributes<HTMLDivElement>["style"];
-		/** 
-		 * Height of the viewer 
-		 * 
+		/**
+		 * Height of the viewer
+		 *
 		 * @default 500
 		 */
 		height?: number | string | TypedUnit;
-		/** 
-		 * Width of the viewer 
-		 * 
+		/**
+		 * Width of the viewer
+		 *
 		 * @default 500
 		 */
 		width?: number | string | TypedUnit;
 		afterMount?: (methods: SVGViewerMethods) => void;
 		methods?: SVGViewerMethods;
-		children?: import('svelte').Snippet;
+		children?: import("svelte").Snippet;
 	} = $props();
 
 	let {
@@ -97,19 +97,20 @@
 
 	methods = _methods;
 
-	const viewerSize = overridable(
-		writable({ height: 0, width: 0 })
-	);
+	const viewerSize = overridable(writable({ height: 0, width: 0 }));
 
 	const initialViewerSize = writable({ height: 0, width: 0 });
 
 	let resizeObserver: ResizeObserver | undefined = undefined;
 
 	/** Converts value to '{value}px' if value is an integer, leaves as it is otherwise */
-	const formatValue = (value: string | number | undefined) => Number.isInteger(value) ? `${value}px` : value;
+	const formatValue = (value: string | number | undefined) =>
+		Number.isInteger(value) ? `${value}px` : value;
 
-	function preventDefault<T extends Event, U extends EventTarget>(fn: (ev: SvelteEvent<T, U>) => void) {
-		return function(this: ThisType<T>, event: SvelteEvent<T, U>) {
+	function preventDefault<T extends Event, U extends EventTarget>(
+		fn: (ev: SvelteEvent<T, U>) => void,
+	) {
+		return function (this: ThisType<T>, event: SvelteEvent<T, U>) {
 			event.preventDefault();
 
 			fn.call(this, event);
@@ -117,85 +118,96 @@
 	}
 
 	onMount(() => {
-		resizeObserver = resizeObserver && new ResizeObserver((entries) => {
-			const findEntry = (id: string): ResizeObserverEntry | undefined => entries.find((entry) => entry.target.id === id);
+		resizeObserver =
+			resizeObserver &&
+			new ResizeObserver((entries) => {
+				const findEntry = (
+					id: string,
+				): ResizeObserverEntry | undefined =>
+					entries.find((entry) => entry.target.id === id);
 
-			let containerEntry: ResizeObserverEntry | undefined = findEntry($containerRef?.id!);
-			let viewerEntry: ResizeObserverEntry | undefined = findEntry($viewerRef?.id!);
-
-			if (containerEntry && $lockToBoundariesState) {
-				const viewerRect = viewerEntry ? viewerEntry.contentRect : $viewerRef?.getBoundingClientRect()!;
-				const containerRect = containerEntry.contentRect;
-
-				const newX = Math.min(
-					0,
-					Math.min(
-						-(containerRect.width - viewerRect.width),
-						$positionState.x,
-					),
+				let containerEntry: ResizeObserverEntry | undefined = findEntry(
+					$containerRef?.id!,
 				);
-				const newY = Math.min(
-					0,
-					Math.min(
-						-(containerRect.height - viewerRect.height),
-						$positionState.y,
-					),
+				let viewerEntry: ResizeObserverEntry | undefined = findEntry(
+					$viewerRef?.id!,
 				);
-	
-				methods.panTo(newX, newY);
-	
-				$viewerSize = {
-					height: viewerRect.height,
-					width: viewerRect.width,
-				};
-			}
 
-			if (containerEntry && viewerEntry) {
-				const viewerRect = viewerEntry.contentRect;
-				const containerRect = containerEntry.contentRect;
-	
-				const scaledContainerSize = {
-					width: containerRect.width * (1 / $scaleState),
-					height: containerRect.height * (1 / $scaleState),
-				};
-	
-				// FIXME: invalid resizing
-	
-				// if (viewerRect.width > scaledContainerSize.width)
-				//     width = scaledContainerSize.width;
-				// else if (viewerRect.width < initialWidth)
-				//     width = initialWidth > scaledContainerSize.width ? scaledContainerSize.width : initialWidth;
-				// if (viewerRect.height > scaledContainerSize.height)
-				//     height = scaledContainerSize.height;
-				// else if (viewerRect.height < initialHeight)
-				//     height = initialHeight > scaledContainerSize.height ? scaledContainerSize.height : initialHeight;
+				if (containerEntry && $lockToBoundariesState) {
+					const viewerRect = viewerEntry
+						? viewerEntry.contentRect
+						: $viewerRef?.getBoundingClientRect()!;
+					const containerRect = containerEntry.contentRect;
 
-				// TODO: maybe resizeBehavior prop?
-				if ($lockToBoundariesState) {
-					if (
-						viewerRect.width > containerRect.width &&
-						containerRect.width !== 0
-					)
-						width = containerRect.width;
-
-					if (
-						viewerRect.height > containerRect.height &&
-						containerRect.height !== 0
-					)
-						height = containerRect.height;
-				}
-
-				if (viewerRect.width > containerRect.width)
-					methods.zoomOnCenter(
-						viewerRect.width / containerRect.width,
+					const newX = Math.min(
+						0,
+						Math.min(
+							-(containerRect.width - viewerRect.width),
+							$positionState.x,
+						),
+					);
+					const newY = Math.min(
+						0,
+						Math.min(
+							-(containerRect.height - viewerRect.height),
+							$positionState.y,
+						),
 					);
 
-				$viewerSize = {
-					height: viewerRect.height,
-					width: viewerRect.width,
-				};
-			}
-		});
+					methods.panTo(newX, newY);
+
+					$viewerSize = {
+						height: viewerRect.height,
+						width: viewerRect.width,
+					};
+				}
+
+				if (containerEntry && viewerEntry) {
+					const viewerRect = viewerEntry.contentRect;
+					const containerRect = containerEntry.contentRect;
+
+					const scaledContainerSize = {
+						width: containerRect.width * (1 / $scaleState),
+						height: containerRect.height * (1 / $scaleState),
+					};
+
+					// FIXME: invalid resizing
+
+					// if (viewerRect.width > scaledContainerSize.width)
+					//     width = scaledContainerSize.width;
+					// else if (viewerRect.width < initialWidth)
+					//     width = initialWidth > scaledContainerSize.width ? scaledContainerSize.width : initialWidth;
+					// if (viewerRect.height > scaledContainerSize.height)
+					//     height = scaledContainerSize.height;
+					// else if (viewerRect.height < initialHeight)
+					//     height = initialHeight > scaledContainerSize.height ? scaledContainerSize.height : initialHeight;
+
+					// TODO: maybe resizeBehavior prop?
+					if ($lockToBoundariesState) {
+						if (
+							viewerRect.width > containerRect.width &&
+							containerRect.width !== 0
+						)
+							width = containerRect.width;
+
+						if (
+							viewerRect.height > containerRect.height &&
+							containerRect.height !== 0
+						)
+							height = containerRect.height;
+					}
+
+					if (viewerRect.width > containerRect.width)
+						methods.zoomOnCenter(
+							viewerRect.width / containerRect.width,
+						);
+
+					$viewerSize = {
+						height: viewerRect.height,
+						width: viewerRect.width,
+					};
+				}
+			});
 
 		// resize if container is smaller than viewer
 		if ($containerRef && $viewerRef) {
@@ -232,11 +244,15 @@
 			if (afterMount) afterMount(methods);
 		} else {
 			throw new Error(`Missing reference to container or/and viewer`);
-		};
+		}
 
 		// https://developer.mozilla.org/en-US/docs/Web/API/EventTarget/addEventListener#using_passive_listeners
-		$viewerRef.addEventListener("touchstart", onTouchStart as any, { passive: false });
-		$viewerRef.addEventListener("touchmove", onTouchMove as any, { passive: false });
+		$viewerRef.addEventListener("touchstart", onTouchStart as any, {
+			passive: false,
+		});
+		$viewerRef.addEventListener("touchmove", onTouchMove as any, {
+			passive: false,
+		});
 
 		return () => {
 			resizeObserver?.disconnect();

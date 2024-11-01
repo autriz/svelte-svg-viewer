@@ -16,9 +16,9 @@
 
 	onMount(() => {
 		mounted = true;
-		
+
 		const firstTimeLoad = sessionStorage.getItem("firstTimeLoad");
-	
+
 		isFirstTimeLoad = !firstTimeLoad ? true : false;
 
 		if (isFirstTimeLoad) {
@@ -53,19 +53,17 @@
 					<CopyButton
 						class="text-md group mt-8 flex items-center justify-between gap-4 break-keep rounded-md border
 							border-border bg-background px-4 py-3 text-left font-mono text-sm text-foreground
-							transition hover:bg-accent active:translate-y-0.5 sm:shrink disabled:active:translate-y-0 disabled:text-muted-foreground"
+							transition hover:bg-accent active:translate-y-0.5 disabled:text-muted-foreground disabled:active:translate-y-0 sm:shrink"
 						text="npm install svelte-svg-viewer"
 					/>
 					<a
 						href="https://github.com/autriz/svelte-svg-viewer"
-						class="flex gap-2 mt-5 rounded-md bg-primary px-4 py-3 text-md text-primary-foreground transition hover:bg-primary/90 active:translate-y-0.5"
+						class="text-md mt-5 flex gap-2 rounded-md bg-primary px-4 py-3 text-primary-foreground transition hover:bg-primary/90 active:translate-y-0.5"
 					>
 						<GithubMark
 							class="h-6 w-6 fill-[#24292f] dark:fill-[#fff]"
 						/>
-						<p>
-							GitHub
-						</p>
+						<p>GitHub</p>
 					</a>
 				</div>
 				<div class="flex grow flex-col items-center justify-center">
@@ -82,26 +80,26 @@
 				<footer class="z-10 flex flex-row gap-4">
 					<button
 						class="z-10 mb-5"
-						onclick={() => { $mode === "dark" ? setMode("light") : setMode("dark") }}
+						onclick={() => {
+							$mode === "dark"
+								? setMode("light")
+								: setMode("dark");
+						}}
 					>
 						{#if $mode === "dark"}
-							<div
-								in:fly={{duration: 250, delay: 250, y: -5}}
-							>
-								<Moon 
+							<div in:fly={{ duration: 250, delay: 250, y: -5 }}>
+								<Moon
 									class="h-7 w-7 fill-[#24292f] dark:fill-[#fff]"
 								/>
 							</div>
 						{:else}
-							<div
-								in:fly={{duration: 250, delay: 250, y: -5}}
-							>
+							<div in:fly={{ duration: 250, delay: 250, y: -5 }}>
 								<Sun
 									class="h-7 w-7 fill-[#24292f] dark:fill-[#fff]"
 								/>
 							</div>
 						{/if}
-				</button>
+					</button>
 				</footer>
 			</div>
 		</div>
@@ -109,7 +107,7 @@
 </SVGViewer>
 
 {#if dev}
-	<div class="absolute bottom-0 right-0 flex w-fit flex-col gap-2 p-3 z-10">
+	<div class="absolute bottom-0 right-0 z-10 flex w-fit flex-col gap-2 p-3">
 		<button
 			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent"
 			onclick={() => methods?.fitToViewer()}

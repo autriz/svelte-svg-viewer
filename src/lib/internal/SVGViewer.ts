@@ -58,7 +58,7 @@ const omittedOptions = [
 	"ignoreScale",
 	"scale",
 	"actionKey",
-	"pinchBehavior"
+	"pinchBehavior",
 ] as const;
 
 export function createViewer(props: CreateSVGViewerProps) {
@@ -85,7 +85,8 @@ export function createViewer(props: CreateSVGViewerProps) {
 	const lockToBoundariesStore =
 		withDefaults.lockToBoundaries ?? options.defaultLockToBoundaries;
 	const actionKeyStore = withDefaults.actionKey ?? options.defaultActionKey;
-	const pinchBehaviorStore = withDefaults.pinchBehavior ?? options.defaultPinchBehavior;
+	const pinchBehaviorStore =
+		withDefaults.pinchBehavior ?? options.defaultPinchBehavior;
 
 	// possibly useless functions
 	let onLockChange: ChangeFn<boolean> = ({ curr, next }) => {
@@ -213,7 +214,9 @@ export function createViewer(props: CreateSVGViewerProps) {
 		);
 	}
 
-	function isPinchGesture(event: SvelteEvent<TouchEvent, SVGElement>): boolean {
+	function isPinchGesture(
+		event: SvelteEvent<TouchEvent, SVGElement>,
+	): boolean {
 		return event.touches.length > 1;
 	}
 
@@ -262,7 +265,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 	}
 
 	function onMouseUp(event: SvelteEvent<MouseEvent, SVGElement>) {
-		event.preventDefault()
+		event.preventDefault();
 
 		const $viewerRef = get(viewerRef);
 		const $containerRef = get(containerRef);
@@ -318,22 +321,22 @@ export function createViewer(props: CreateSVGViewerProps) {
 
 			if (get(pinchBehaviorStore) == "zoomDrag") {
 				const newOffset = getPinchCenter(touch1Pos, touch2Pos);
-		
+
 				offset = {
 					x: newOffset.x - $position.x,
 					y: newOffset.y - $position.y,
 				};
 			}
-			
+
 			if (event.cancelable) event.preventDefault();
 		} else {
 			const newOffset = getTouchPosition(event, $viewerRef);
-	
+
 			offset = {
 				x: newOffset.x - $position.x,
 				y: newOffset.y - $position.y,
 			};
-	
+
 			hasPointerDown = true;
 		}
 	}
@@ -381,19 +384,19 @@ export function createViewer(props: CreateSVGViewerProps) {
 		if ($isMoving) return;
 
 		const [touch1, touch2] = [event.touches[0], event.touches[1]];
-			
+
 		const touch1Pos = { x: touch1.clientX, y: touch1.clientY };
 		const touch2Pos = { x: touch2.clientX, y: touch2.clientY };
-		
+
 		const newCenter = getPinchCenter(touch1Pos, touch2Pos);
 
 		if (!lastCenter) {
 			lastCenter = newCenter;
 			return;
 		}
-		
+
 		const distance = getPinchDistance(touch1Pos, touch2Pos);
-		
+
 		const $scale = get(scale);
 		const $pinchBehavior = get(pinchBehaviorStore);
 
@@ -426,8 +429,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 
 				zoom(newCenter.x, newCenter.y, newScale);
 				pan(newX * scaleDiff, newY * scaleDiff);
-			}
-			else if ($pinchBehavior === "zoomOnly") {
+			} else if ($pinchBehavior === "zoomOnly") {
 				zoom(newCenter.x, newCenter.y, newScale);
 			}
 
@@ -492,15 +494,15 @@ export function createViewer(props: CreateSVGViewerProps) {
 				0,
 				Math.max(y, -(containerRect.height - viewerRect.height)),
 			);
-	
+
 			// TODO:
 			// optional thing, resets offset when hitting borders
 			// maybe hide it behind some option like dragBehavior
-	
+
 			// if (newX == 0 || newX == -(containerRect.width - viewerRect.width)) {
 			//     offset.x = newPos.x - get(position).x;
 			// }
-	
+
 			// if (newY == 0 || newY == -(containerRect.height - viewerRect.height)) {
 			//     offset.y = newPos.y - get(position).y;
 			// }
@@ -519,7 +521,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 		const $viewerRef = get(viewerRef);
 		const $lockToBoundaries = get(lockToBoundaries);
 		const $position = get(position);
-		
+
 		if (!$containerRef || !$viewerRef) return;
 
 		const containerRect = $containerRef.getBoundingClientRect();
@@ -604,7 +606,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 		if (
 			$lockToBoundaries &&
 			(scaledContainerWidth < viewerRect.width ||
-			scaledContainerHeight < viewerRect.height)
+				scaledContainerHeight < viewerRect.height)
 		) {
 			fitToViewer();
 
@@ -626,23 +628,14 @@ export function createViewer(props: CreateSVGViewerProps) {
 			if ($lockToBoundaries) {
 				newX = Math.min(
 					0,
-					Math.max(
-						newX,
-						-(
-							scaledContainerWidth -
-							viewerRect.width
-						),
-					),
+					Math.max(newX, -(scaledContainerWidth - viewerRect.width)),
 				);
 
 				newY = Math.min(
 					0,
 					Math.max(
 						newY,
-						-(
-							scaledContainerHeight -
-							viewerRect.height
-						),
+						-(scaledContainerHeight - viewerRect.height),
 					),
 				);
 			}
@@ -690,12 +683,13 @@ export function createViewer(props: CreateSVGViewerProps) {
 		// calculate scale that needed to be set to fit container in the window
 		const scaleY = viewerHeight / initialContainerHeight;
 		const scaleX = viewerWidth / initialContainerWidth;
-		
+
 		let newScale: number;
 
 		if ($lockToBoundaries) {
-			newScale = [scaleX, scaleY].reduce((prev, curr) => 
-  				(Math.abs(curr - 1) < Math.abs(prev - 1) ? curr : prev));
+			newScale = [scaleX, scaleY].reduce((prev, curr) =>
+				Math.abs(curr - 1) < Math.abs(prev - 1) ? curr : prev,
+			);
 		} else {
 			// if not locked this should do the trick
 			newScale = (scaleY + scaleX) / 2;

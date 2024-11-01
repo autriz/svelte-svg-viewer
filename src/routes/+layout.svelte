@@ -10,12 +10,13 @@
 </svelte:head>
 
 <ModeWatcher
-	modeStorageKey={"color-theme"} 
-	lightClassNames={["light"]} 
+	modeStorageKey={"color-theme"}
+	lightClassNames={["light"]}
 	darkClassNames={["dark"]}
 />
 
-<div class="h-fit min-h-screen w-screen bg-background text-foreground overflow-auto">
+<div
+	class="h-fit min-h-screen w-screen overflow-auto bg-background text-foreground"
+>
 	{@render children?.()}
 </div>
-

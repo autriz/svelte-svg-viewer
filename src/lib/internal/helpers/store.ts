@@ -117,10 +117,7 @@ export const overridable = <T>(
 	store: Writable<T>,
 	onChange?: ChangeFn<T>,
 ): Overridable<T> => {
-	function update(
-		updater: Updater<T>,
-		sideEffect?: (newValue: T) => void,
-	) {
+	function update(updater: Updater<T>, sideEffect?: (newValue: T) => void) {
 		store.update((curr) => {
 			const next = updater(curr);
 			let res: T = next;
@@ -131,7 +128,7 @@ export const overridable = <T>(
 			sideEffect?.(res);
 			return res;
 		});
-	};
+	}
 
 	function set(curr: T) {
 		update(() => curr);
