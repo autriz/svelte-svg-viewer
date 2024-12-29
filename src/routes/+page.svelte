@@ -53,12 +53,12 @@
 					<CopyButton
 						class="text-md group mt-8 flex items-center justify-between gap-4 break-keep rounded-md border
 							border-border bg-background px-4 py-3 text-left font-mono text-sm text-foreground
-							transition hover:bg-accent active:translate-y-0.5 disabled:text-muted-foreground disabled:active:translate-y-0 sm:shrink"
+							transition-colors hover:bg-accent active:translate-y-0.5 disabled:text-muted-foreground disabled:active:translate-y-0 sm:shrink"
 						text="npm install svelte-svg-viewer"
 					/>
 					<a
 						href="https://github.com/autriz/svelte-svg-viewer"
-						class="text-md mt-5 flex gap-2 rounded-md bg-primary px-4 py-3 text-primary-foreground transition hover:bg-primary/90 active:translate-y-0.5"
+						class="text-md mt-5 flex gap-2 rounded-md bg-primary px-4 py-3 text-primary-foreground transition-colors hover:bg-primary/90 active:translate-y-0.5"
 					>
 						<GithubMark
 							class="h-6 w-6 fill-[#24292f] dark:fill-[#fff]"
@@ -109,13 +109,13 @@
 {#if dev}
 	<div class="absolute bottom-0 right-0 z-10 flex w-fit flex-col gap-2 p-3">
 		<button
-			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent"
+			class="rounded-md border border-border p-3 text-foreground transition-colors hover:bg-accent"
 			onclick={() => methods?.fitToViewer()}
 		>
 			.fitToViewer()
 		</button>
 		<button
-			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent"
+			class="rounded-md border border-border p-3 text-foreground transition-colors hover:bg-accent"
 			onclick={() => methods?.fitSelection(40, 40, 200, 200)}
 		>
 			.fitToSelection(40, 40, 200, 200)

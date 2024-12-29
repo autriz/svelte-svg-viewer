@@ -97,7 +97,7 @@
 
 	methods = _methods;
 
-	const viewerSize = overridable(writable({ height: 0, width: 0 }));
+	const viewerSize = writable({ height: 0, width: 0 });
 
 	const initialViewerSize = writable({ height: 0, width: 0 });
 
