@@ -3,7 +3,6 @@
 	import type { HTMLAttributes } from "svelte/elements";
 	import { writable } from "svelte/store";
 	import type { SVGViewerMethods } from "$lib/internal/types.js";
-	import { overridable } from "$lib/internal/index.js";
 	import { setCtx } from "./ctx.js";
 	import type { Props } from "./types.js";
 
@@ -98,11 +97,8 @@
 
 	export const methods = _methods;
 
-	const viewerSize = overridable(
-		writable({ height: 0, width: 0 })
-	);
-
-	const initialViewerSize = writable({ height: 0, width: 0 });
+	// const viewerSize = writable({ height: 0, width: 0 });
+	// const initialViewerSize = writable({ height: 0, width: 0 });
 
 	let resizeObserver: ResizeObserver | undefined = undefined;
 
@@ -137,10 +133,10 @@
 	
 				methods.panTo(newX, newY);
 	
-				$viewerSize = {
-					height: viewerRect.height,
-					width: viewerRect.width,
-				};
+				// $viewerSize = {
+				// 	height: viewerRect.height,
+				// 	width: viewerRect.width,
+				// };
 			}
 
 			if (containerEntry && viewerEntry) {
@@ -183,10 +179,10 @@
 						viewerRect.width / containerRect.width,
 					);
 
-				$viewerSize = {
-					height: viewerRect.height,
-					width: viewerRect.width,
-				};
+				// $viewerSize = {
+				// 	height: viewerRect.height,
+				// 	width: viewerRect.width,
+				// };
 			}
 		});
 
@@ -195,12 +191,12 @@
 			const containerRect = $containerRef.getBoundingClientRect();
 			const viewerRect = $viewerRef.getBoundingClientRect();
 
-			$viewerSize = {
-				height: viewerRect.height,
-				width: viewerRect.width,
-			};
+			// $viewerSize = {
+			// 	height: viewerRect.height,
+			// 	width: viewerRect.width,
+			// };
 
-			$initialViewerSize = $viewerSize;
+			// $initialViewerSize = $viewerSize;
 
 			// check if viewer is bigger than container
 			// also check for a adaptive container size (always 0 at the start)

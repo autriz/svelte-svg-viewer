@@ -56,7 +56,7 @@
 						Element viewer for Svelte
 					</p>
 					<CopyButton
-						class="text-md group mt-8 flex items-center justify-between gap-4 break-keep rounded-md border
+						class="mt-8 flex items-center justify-between gap-4 break-keep rounded-md border
 							border-border bg-background px-4 py-3 text-left font-mono text-sm text-foreground
 							transition hover:bg-accent active:translate-y-0.5 sm:shrink disabled:active:translate-y-0 disabled:text-muted-foreground"
 						text="npm install svelte-svg-viewer"
