@@ -121,25 +121,25 @@
 {#if dev}
 	<div class="absolute bottom-0 right-0 flex w-fit flex-col gap-2 p-3 z-10">
 		<button
-			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent"
+			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
 			on:click={() => methods.fitToViewer()}
 		>
 			.fitToViewer()
 		</button>
 		<button
-			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent"
+			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
 			on:click={() => methods.fitSelection(40, 40, 200, 200)}
 		>
 			.fitToSelection(40, 40, 200, 200)
 		</button>
 		<button
-			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent"
+			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
 			on:click={() => $lockToBoundaries = !$lockToBoundaries}
 		>
 			{$lockToBoundaries ? "Unlock" : "Lock"} boundaries
 		</button>
 		<button
-			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent"
+			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
 			on:click={() => $scale = .6}
 		>
 			Set scale to .6
