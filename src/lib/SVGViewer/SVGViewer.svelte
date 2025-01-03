@@ -33,21 +33,16 @@
 	export let style: $$Props["style"] = "";
 	export let height: $$Props["height"] = 500;
 	export let width: $$Props["width"] = 500;
-	export let defaultPosition: $$Props["defaultPosition"] = { x: 0, y: 0 };
-	export let position: $$Props["position"] = undefined;
+	export let position: $$Props["position"] = { x: 0, y: 0 };
 	export let maxScale: $$Props["maxScale"] = undefined;
 	export let minScale: $$Props["minScale"] = undefined;
-	export let defaultIgnoreScale: $$Props["defaultIgnoreScale"] = false;
-	export let ignoreScale: $$Props["ignoreScale"] = undefined;
-	export let defaultScale: $$Props["defaultScale"] = 1;
-	export let scale: $$Props["scale"] = undefined;
+	export let ignoreScale: $$Props["ignoreScale"] = false;
+	export let scale: $$Props["scale"] = 1;
 	export let scaleMouseSensitivity: $$Props["scaleMouseSensitivity"] =
 		undefined;
 	export let scaleTouchpadSensitivity: $$Props["scaleTouchpadSensitivity"] =
 		undefined;
-	export let defaultLockToBoundaries: $$Props["defaultLockToBoundaries"] = false;
-	export let lockToBoundaries: $$Props["lockToBoundaries"] = undefined;
-	export let defaultActionKey: $$Props["defaultActionKey"] = undefined;
+	export let lockToBoundaries: $$Props["lockToBoundaries"] = false;
 	export let actionKey: $$Props["actionKey"] = undefined;
 	/** TODO */
 	export let pinchBehavior: $$Props["pinchBehavior"] = undefined;
@@ -78,19 +73,14 @@
 		},
 		refs: { viewerRef, containerRef },
 	} = setCtx({
-		defaultPosition,
 		position,
 		maxScale,
 		minScale,
-		defaultIgnoreScale,
 		ignoreScale,
-		defaultScale,
 		scale,
 		scaleMouseSensitivity,
 		scaleTouchpadSensitivity,
-		defaultLockToBoundaries,
 		lockToBoundaries,
-		defaultActionKey,
 		actionKey,
 		pinchBehavior,
 	});
