@@ -8,18 +8,22 @@
 	import { dev } from "$app/environment";
 	import { Moon, Sun } from "lucide-svelte";
 	import { setMode, mode } from "mode-watcher";
+	import { writable } from "svelte/store";
 
 	let methods: SVGViewerMethods | undefined = $state(undefined);
 	let heroEl: HTMLDivElement | undefined = $state(undefined);
 	let mounted = $state(false);
 	let isFirstTimeLoad = $state(false);
 
+	let lockToBoundaries = dev ? writable(true) : true;
+	let scale = dev ? writable(1) : 1;
+
 	onMount(() => {
 		mounted = true;
 
 		const firstTimeLoad = sessionStorage.getItem("firstTimeLoad");
 
-		isFirstTimeLoad = !firstTimeLoad ? true : false;
+		isFirstTimeLoad = !firstTimeLoad;
 
 		if (isFirstTimeLoad) {
 			sessionStorage.setItem("firstTimeLoad", "done");
@@ -32,7 +36,8 @@
 	width="100vw"
 	height="100vh"
 	maxScale={5}
-	defaultLockToBoundaries={true}
+	{scale}
+	{lockToBoundaries}
 	svgClass="fill-transparent"
 	afterMount={(methods) => methods.center()}
 	bind:methods
@@ -119,6 +124,18 @@
 			onclick={() => methods?.fitSelection(40, 40, 200, 200)}
 		>
 			.fitToSelection(40, 40, 200, 200)
+		</button>
+		<button
+			class="rounded-md border border-border p-3 text-foreground transition-colors hover:bg-accent"
+			onclick={() => $lockToBoundaries = !$lockToBoundaries}
+		>
+			{$lockToBoundaries ? "Unlock" : "Lock"} boundaries
+		</button>
+		<button
+			class="rounded-md border border-border p-3 text-foreground transition-colors hover:bg-accent"
+			onclick={() => $scale = .6}
+		>
+			Set scale to .6
 		</button>
 	</div>
 {/if}

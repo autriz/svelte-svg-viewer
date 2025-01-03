@@ -2,32 +2,7 @@ import type { CreateSVGViewerProps } from "$lib/internal/SVGViewer.js";
 
 export type Props = {
 	/**
-	 * The uncontrolled default position value of the container inside the viewer.
-	 *
-	 * For more control use `position` prop.
-	 *
-	 * @example
-	 * ```svelte
-	 * <script>
-	 * 	import { SVGViewer } from "svelte-svg-viewer";
-	 *
-	 * 	let defaultPosition = { x: 100, y: 100 };
-	 * </script>
-	 *
-	 * <SVGViewer {defaultPosition}>
-	 * 	...
-	 * </SVGViewer>
-	 * ```
-	 *
-	 * @default { x: 0, y: 0 }
-	 */
-	defaultPosition?: CreateSVGViewerProps["defaultPosition"] & {};
-	/**
-	 * The controlled position value store of the container inside the viewer.
-	 *
-	 * If provided, this will override the value passed to `defaultPosition`.
-	 *
-	 * For less control use `defaultPosition` prop.
+	 * Position value of the container inside the viewer.
 	 *
 	 * @example
 	 * ```svelte
@@ -36,6 +11,8 @@ export type Props = {
 	 * 	import { SVGViewer } from "svelte-svg-viewer";
 	 *
 	 * 	let position = writable({x: 0, y: 0});
+	 * 	// or
+	 * 	let position = { x: 0, y: 0 };
 	 * </script>
 	 *
 	 * <SVGViewer {position}>
@@ -43,13 +20,13 @@ export type Props = {
 	 * </SVGViewer>
 	 * ```
 	 *
-	 * @default undefined
+	 * @default { x: 0, y: 0 }
 	 */
 	position?: CreateSVGViewerProps["position"] & {};
 	/**
 	 * The maximum value that viewer can zoom in to.
 	 *
-	 * **Note: scale changes respect `lockToBoundaries`/`defaultLockToBoundaries` prop**
+	 * **Note: scale changes respect `lockToBoundaries` prop**
 	 *
 	 * @example
 	 * ```svelte
@@ -70,7 +47,7 @@ export type Props = {
 	/**
 	 * The minimum value that viewer can zoom out to.
 	 *
-	 * **Note: scale changes respect `lockToBoundaries`/`defaultLockToBoundaries` prop.**
+	 * **Note: scale changes respect `lockToBoundaries` prop.**
 	 *
 	 * @example
 	 * ```svelte
@@ -89,38 +66,10 @@ export type Props = {
 	 */
 	minScale?: CreateSVGViewerProps["minScale"] & {};
 	/**
-	 * The uncontrolled default value for deciding whether
+	 * Value store for deciding whether
 	 * the viewer can ignore scale restrictions.
 	 *
-	 * **Note: scale changes respect `lockToBoundaries`/`defaultLockToBoundaries` prop.**
-	 *
-	 * For more control use `ignoreScale` prop.
-	 *
-	 * @example
-	 * ```svelte
-	 * <script>
-	 * 	import { SVGViewer } from "svelte-svg-viewer";
-	 *
-	 * 	let defaultIgnoreScale = true;
-	 * </script>
-	 *
-	 * <SVGViewer {defaultIgnoreScale}>
-	 * 	...
-	 * </SVGViewer>
-	 * ```
-	 *
-	 * @default false
-	 */
-	defaultIgnoreScale?: CreateSVGViewerProps["defaultIgnoreScale"] & {};
-	/**
-	 * The controlled value store for deciding whether
-	 * the viewer can ignore scale restrictions.
-	 *
-	 * If provided, this will override the value passed to `defaultIgnoreScale`.
-	 *
-	 * **Note: scale changes respect `lockToBoundaries`/`defaultLockToBoundaries` prop.**
-	 *
-	 * For less control use `defaultIgnoreScale` prop.
+	 * **Note: scale changes respect `lockToBoundaries` prop.**
 	 *
 	 * @example
 	 * ```svelte
@@ -129,6 +78,8 @@ export type Props = {
 	 * 	import { SVGViewer } from "svelte-svg-viewer";
 	 *
 	 * 	let ignoreScale = writable(false);
+	 * 	// or
+	 * 	let ignoreScale = false;
 	 * </script>
 	 *
 	 * <SVGViewer {ignoreScale}>
@@ -136,40 +87,13 @@ export type Props = {
 	 * </SVGViewer>
 	 * ```
 	 *
-	 * @default undefined
+	 * @default false
 	 */
 	ignoreScale?: CreateSVGViewerProps["ignoreScale"] & {};
 	/**
-	 * The uncontrolled default value for the initial scale.
+	 * Value for the initial scale.
 	 *
-	 * **Note: scale changes respect `lockToBoundaries`/`defaultLockToBoundaries` prop.**
-	 *
-	 * For more control use `scale` prop.
-	 *
-	 * @example
-	 * ```svelte
-	 * <script>
-	 * 	import { SVGViewer } from "svelte-svg-viewer";
-	 *
-	 * 	let defaultScale = 1.2;
-	 * </script>
-	 *
-	 * <SVGViewer {defaultScale}>
-	 * 	...
-	 * </SVGViewer>
-	 * ```
-	 *
-	 * @default 1
-	 */
-	defaultScale?: CreateSVGViewerProps["defaultScale"] & {};
-	/**
-	 * The controlled value store for the initial scale.
-	 *
-	 * If provided, this will override the value passed to `defaultScale`.
-	 *
-	 * **Note: scale changes respect `lockToBoundaries`/`defaultLockToBoundaries` prop.**
-	 *
-	 * For less control use `defaultScale` prop.
+	 * **Note: scale changes respect `lockToBoundaries` prop.**
 	 *
 	 * @example
 	 * ```svelte
@@ -178,6 +102,8 @@ export type Props = {
 	 * 	import { SVGViewer } from "svelte-svg-viewer";
 	 *
 	 * 	let scale = writable(1);
+	 * 	// or
+	 * 	let scale = 1;
 	 * </script>
 	 *
 	 * <SVGViewer {scale}>
@@ -185,7 +111,7 @@ export type Props = {
 	 * </SVGViewer>
 	 * ```
 	 *
-	 * @default undefined
+	 * @default 1
 	 */
 	scale?: CreateSVGViewerProps["scale"] & {};
 	/**
@@ -227,34 +153,7 @@ export type Props = {
 	 */
 	scaleTouchpadSensitivity?: CreateSVGViewerProps["scaleTouchpadSensitivity"] & {};
 	/**
-	 * The uncontrolled default value for deciding whether
-	 * the user can go out of bounds of the container.
-	 *
-	 * For more control use `lockToBoundaries` prop.
-	 *
-	 * @example
-	 * ```svelte
-	 * <script>
-	 * 	import { SVGViewer } from "svelte-svg-viewer";
-	 *
-	 * 	let defaultLockToBoundaries = true;
-	 * </script>
-	 *
-	 * <SVGViewer {defaultLockToBoundaries}>
-	 * 	...
-	 * </SVGViewer>
-	 * ```
-	 *
-	 * @default false
-	 */
-	defaultLockToBoundaries?: CreateSVGViewerProps["defaultLockToBoundaries"] & {};
-	/**
-	 * The controlled value store for deciding whether
-	 * the user can go out of bounds of the container.
-	 *
-	 * If provided, this will override the value passed to `defaultLockToBoundaries`.
-	 *
-	 * For less control use `defaultLockToBoundaries` prop.
+	 * Value for deciding whether the user can go out of bounds of the container.
 	 *
 	 * @example
 	 * ```svelte
@@ -263,6 +162,8 @@ export type Props = {
 	 * 	import { SVGViewer } from "svelte-svg-viewer";
 	 *
 	 * 	let lockToBoundaries = writable(true);
+	 * 	// or
+	 * 	let lockToBoundaries = true;
 	 * </script>
 	 *
 	 * <SVGViewer {lockToBoundaries}>
@@ -270,40 +171,11 @@ export type Props = {
 	 * </SVGViewer>
 	 * ```
 	 *
-	 * @default undefined
+	 * @default false
 	 */
 	lockToBoundaries?: CreateSVGViewerProps["lockToBoundaries"] & {};
 	/**
-	 * The uncontrolled default value for action key.
-	 *
 	 * If provided, panning and zooming are disabled unless action key is pressed.
-	 *
-	 * For more control use `actionKey` prop.
-	 *
-	 * @example
-	 * ```svelte
-	 * <script>
-	 * 	import { SVGViewer } from "svelte-svg-viewer";
-	 *
-	 * 	let defaultActionKey = "Control";
-	 * </script>
-	 *
-	 * <SVGViewer {defaultActionKey}>
-	 * 	...
-	 * </SVGViewer>
-	 * ```
-	 *
-	 * @default undefined
-	 */
-	defaultActionKey?: CreateSVGViewerProps["defaultActionKey"] & {};
-	/**
-	 * The controlled value store for action key.
-	 *
-	 * If provided, panning and zooming are disabled unless action key is pressed.
-	 *
-	 * If provided, this will override the value passed to `defaultActionKey`.
-	 *
-	 * For less control use `defaultActionKey` prop.
 	 *
 	 * @example
 	 * ```svelte
@@ -312,6 +184,8 @@ export type Props = {
 	 * 	import { SVGViewer } from "svelte-svg-viewer";
 	 *
 	 * 	let actionKey = writable("Control");
+	 * 	// or
+	 * 	let actionKey = "Control";
 	 * </script>
 	 *
 	 * <SVGViewer {actionKey}>
@@ -323,36 +197,10 @@ export type Props = {
 	 */
 	actionKey?: CreateSVGViewerProps["actionKey"] & {};
 	/**
-	 * The uncontrolled default value for pinch behavior.
+	 * Value store for pinch behavior.
 	 *
 	 * Pinch behavior has two modes: zoom only and zoom drag. Zoom only allows
 	 * for zooming while pinching and zoom drag allows for both zooming and dragging.
-	 *
-	 * For more control use `pinchBehavior` prop.
-	 *
-	 * @example
-	 * ```svelte
-	 * <script>
-	 * 	import { SVGViewer } from "svelte-svg-viewer";
-	 *
-	 * 	let defaultPinchBehavior = "zoomOnly";
-	 * </script>
-	 *
-	 * <SVGViewer {defaultPinchBehavior}>
-	 * 	...
-	 * </SVGViewer>
-	 * ```
-	 *
-	 * @default "zoomOnly"
-	 */
-	defaultPinchBehavior?: CreateSVGViewerProps["defaultPinchBehavior"] & {};
-	/**
-	 * The controlled value store for pinch behavior.
-	 *
-	 * Pinch behavior has two modes: zoom only and zoom drag. Zoom only allows
-	 * for zooming while pinching and zoom drag allows for both zooming and dragging.
-	 *
-	 * For less control use `defaultPinchBehavior` prop.
 	 *
 	 * @example
 	 * ```svelte
@@ -361,6 +209,8 @@ export type Props = {
 	 * 	import { SVGViewer } from "svelte-svg-viewer";
 	 *
 	 * 	let pinchBehavior = writable("zoomOnly");
+	 * 	// or
+	 * 	let pinchBehavior = "zoomOnly"
 	 * </script>
 	 *
 	 * <SVGViewer {pinchBehavior}>
@@ -368,7 +218,7 @@ export type Props = {
 	 * </SVGViewer>
 	 * ```
 	 *
-	 * @default undefined
+	 * @default "zoomOnly"
 	 */
 	pinchBehavior?: CreateSVGViewerProps["pinchBehavior"] & {};
 };

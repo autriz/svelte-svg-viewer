@@ -1,64 +1,44 @@
-import { get, writable, type Writable } from "svelte/store";
+import { derived, get, writable, type Writable } from "svelte/store";
 import {
-	overridable,
-	type ChangeFn,
-	effect,
+	type MaybeWritable,
 	removeUndefined,
 	toWritableStores,
 	omit,
+	clamp,
 } from "./index.js";
-import {
-	type PinchBehavior,
-	type Key,
-	type Position,
-	type SvelteEvent,
-} from "./types.js";
+import type { PinchBehavior, Key, Position, SvelteEvent } from "./types.js";
 
 export type CreateSVGViewerProps = {
-	defaultPosition?: Position;
-	position?: Writable<Position>;
+	position?: MaybeWritable<Position>;
 	maxScale?: number;
 	minScale?: number;
-	defaultIgnoreScale?: boolean;
-	ignoreScale?: Writable<boolean>;
-	defaultScale?: number;
-	scale?: Writable<number>;
+	ignoreScale?: MaybeWritable<boolean>;
+	scale?: MaybeWritable<number>;
 	scaleMouseSensitivity?: number;
 	scaleTouchpadSensitivity?: number;
-	defaultLockToBoundaries?: boolean;
-	lockToBoundaries?: Writable<boolean>;
-	defaultActionKey?: Key;
-	actionKey?: Writable<Key>;
-	defaultPinchBehavior?: PinchBehavior;
-	pinchBehavior?: Writable<PinchBehavior>;
+	lockToBoundaries?: MaybeWritable<boolean>;
+	actionKey?: MaybeWritable<Key>;
+	pinchBehavior?: MaybeWritable<PinchBehavior>;
 };
 
 const defaultProps = {
-	defaultPosition: { x: 0, y: 0 },
-	position: undefined,
+	position: { x: 0, y: 0 },
 	maxScale: 1.4,
 	minScale: 0.6,
-	defaultIgnoreScale: false,
-	ignoreScale: undefined,
-	defaultScale: 1,
-	scale: undefined,
+	ignoreScale: false,
+	scale: 1,
 	scaleMouseSensitivity: 1.1,
 	scaleTouchpadSensitivity: 1.06,
-	defaultLockToBoundaries: false,
-	lockToBoundaries: undefined,
-	defaultActionKey: undefined,
+	lockToBoundaries: false,
 	actionKey: undefined,
-	defaultPinchBehavior: "zoomOnly",
-	pinchBehavior: undefined,
+	pinchBehavior: "zoomOnly",
 } as const;
 
 const omittedOptions = [
-	"lockToBoundaries",
-	"position",
-	"ignoreScale",
-	"scale",
-	"actionKey",
-	"pinchBehavior",
+	"minScale",
+	"maxScale",
+	"scaleMouseSensitivity",
+	"scaleTouchpadSensitivity",
 ] as const;
 
 export function createViewer(props: CreateSVGViewerProps) {
@@ -67,68 +47,26 @@ export function createViewer(props: CreateSVGViewerProps) {
 		...removeUndefined(props),
 	} satisfies CreateSVGViewerProps;
 
-	const options = toWritableStores(
-		omit({ ...withDefaults }, ...omittedOptions),
-	);
+	const options = toWritableStores(omit(withDefaults, ...omittedOptions));
 
-	// export let bracketWidth: number;
-	// export let bracketHeight: number;
-	let minScale: number = withDefaults.minScale;
-	let maxScale: number = withDefaults.maxScale;
+	let minScale = withDefaults.minScale;
+	let maxScale = withDefaults.maxScale;
 	let scaleMouseSensitivity = withDefaults.scaleMouseSensitivity;
 	let scaleTouchpadSensitivity = withDefaults.scaleTouchpadSensitivity;
 
-	const positionStore = withDefaults.position ?? options.defaultPosition;
-	const ignoreScaleStore =
-		withDefaults.ignoreScale ?? options.defaultIgnoreScale;
-	const scaleStore = withDefaults.scale ?? options.defaultScale;
-	const lockToBoundariesStore =
-		withDefaults.lockToBoundaries ?? options.defaultLockToBoundaries;
-	const actionKeyStore = withDefaults.actionKey ?? options.defaultActionKey;
-	const pinchBehaviorStore =
-		withDefaults.pinchBehavior ?? options.defaultPinchBehavior;
+	let position = options.position;
+	let ignoreScale = options.ignoreScale;
+	let scale = options.scale;
+	let lockToBoundaries = options.lockToBoundaries;
+	let actionKey = options.actionKey;
+	let pinchBehavior = options.pinchBehavior;
 
-	// possibly useless functions
-	let onLockChange: ChangeFn<boolean> = ({ curr, next }) => {
-		return next;
-	};
-
-	let onPositionChange: ChangeFn<Position> | undefined = ({ curr, next }) => {
-		return next;
-	};
-
-	// not that useless, controls scale to not overflow minScale/maxScale
-	let onScaleChange: ChangeFn<number> | undefined = ({ curr, next }) => {
-		if (get(ignoreScaleStore)) return next;
-
-		if (next > maxScale) return curr;
-		if (next < minScale) return curr;
-
-		return next;
-	};
-
-	let lockToBoundaries = overridable(lockToBoundariesStore, onLockChange);
-	let scale = overridable<number>(scaleStore, onScaleChange);
-	let position = overridable<Position>(positionStore, onPositionChange);
 	let viewerRef: Writable<SVGElement | undefined> = writable(undefined);
 	let containerRef: Writable<SVGElement | undefined> = writable(undefined);
 
-	let offset: Position = { x: 0, y: 0 };
-	let lastCenter: Position | null = null;
-	let lastDistance: number;
-
-	let hasActionKeyPressed = get(actionKeyStore) === undefined ? true : false;
-	// Both of these variables detect how to respond on a client interaction
-	let hasPointerDown = false;
-	let isMoving = writable(false);
-
-	// DONE? FIXME: mobile zooming?
-	// DONE? FIXME: adjust x/y positioning when locking to container rect
-
-	// This effect is handling locking of viewer by
-	// recalculating position
-	effect([lockToBoundaries], ([$lockToBoundaries]) => {
-		if (!$lockToBoundaries) return;
+	let _lockUnsub = derived(lockToBoundaries, (locked) => {
+		console.log(locked);
+		if (!locked) return;
 
 		const $viewerRef = get(viewerRef);
 		const $containerRef = get(containerRef);
@@ -138,25 +76,48 @@ export function createViewer(props: CreateSVGViewerProps) {
 		const containerRect = $containerRef.getBoundingClientRect();
 		const viewerRect = $viewerRef.getBoundingClientRect();
 
+		console.log("change position");
+
 		position.update(($position) => {
-			const newX = Math.min(
+			const newX = clamp(
+				-(containerRect.width - viewerRect.width),
+				$position.x,
 				0,
-				Math.max(
-					$position.x,
-					-(containerRect.width - viewerRect.width),
-				),
 			);
-			const newY = Math.min(
+			const newY = clamp(
+				-(containerRect.height - viewerRect.height),
+				$position.y,
 				0,
-				Math.max(
-					$position.y,
-					-(containerRect.height - viewerRect.height),
-				),
 			);
+
+			console.log("updated");
 
 			return { x: newX, y: newY };
 		});
-	});
+	}).subscribe(() => {});
+
+	let _scaleUnsub = derived(options.scale, (scale) => {
+		if (get(ignoreScale)) return;
+
+		console.log(scale);
+
+		let clampedValue = clamp(minScale, scale, maxScale);
+
+		console.log(clampedValue);
+
+		if (clampedValue !== scale) {
+			options.scale.set(clampedValue);
+		}
+	}).subscribe(() => {});
+
+	let offset: Position = { x: 0, y: 0 };
+	let lastCenter: Position | null = null;
+	let lastDistance: number;
+
+	let hasActionKeyPressed = get(actionKey) === undefined ? true : false;
+	// Both of these variables detect how to respond on a client interaction
+	let hasPointerDown = false;
+	let isMoving = writable(false);
 
 	function getMousePosition(
 		event: SvelteEvent<MouseEvent, SVGElement>,
@@ -245,9 +206,13 @@ export function createViewer(props: CreateSVGViewerProps) {
 		const $containerRef = get(containerRef);
 		const $isMoving = get(isMoving);
 
-		if (!$containerRef || !$viewerRef) return;
-		if (!hasActionKeyPressed) return;
-		if (!hasPointerDown && !$isMoving) return;
+		if (
+			!$containerRef ||
+			!$viewerRef ||
+			!hasActionKeyPressed ||
+			(!hasPointerDown && !$isMoving)
+		)
+			return;
 
 		if (!$isMoving) {
 			isMoving.set(true);
@@ -319,7 +284,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 
 			lastDistance = getPinchDistance(touch1Pos, touch2Pos);
 
-			if (get(pinchBehaviorStore) == "zoomDrag") {
+			if (get(pinchBehavior) == "zoomDrag") {
 				const newOffset = getPinchCenter(touch1Pos, touch2Pos);
 
 				offset = {
@@ -398,7 +363,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 		const distance = getPinchDistance(touch1Pos, touch2Pos);
 
 		const $scale = get(scale);
-		const $pinchBehavior = get(pinchBehaviorStore);
+		const $pinchBehavior = get(pinchBehavior);
 
 		if (!lastDistance) {
 			lastDistance = distance;
@@ -455,7 +420,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 	}
 
 	function onKeyDown(e: SvelteEvent<KeyboardEvent, Window>) {
-		const $actionKey = get(actionKeyStore);
+		const $actionKey = get(actionKey);
 
 		if (e.repeat || hasActionKeyPressed) return;
 
@@ -463,7 +428,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 	}
 
 	function onKeyUp(e: SvelteEvent<KeyboardEvent, Window>) {
-		const $actionKey = get(actionKeyStore);
+		const $actionKey = get(actionKey);
 
 		if (!hasActionKeyPressed) return;
 
@@ -486,14 +451,8 @@ export function createViewer(props: CreateSVGViewerProps) {
 		const viewerRect = $viewerRef.getBoundingClientRect();
 
 		if ($lockToBoundaries) {
-			x = Math.min(
-				0,
-				Math.max(x, -(containerRect.width - viewerRect.width)),
-			);
-			y = Math.min(
-				0,
-				Math.max(y, -(containerRect.height - viewerRect.height)),
-			);
+			x = clamp(-(containerRect.width - viewerRect.width), x, 0);
+			y = clamp(-(containerRect.height - viewerRect.height), y, 0);
 
 			// TODO:
 			// optional thing, resets offset when hitting borders
@@ -533,19 +492,15 @@ export function createViewer(props: CreateSVGViewerProps) {
 		};
 
 		if ($lockToBoundaries) {
-			newPosition.x = Math.min(
+			newPosition.x = clamp(
+				-(containerRect.width - viewerRect.width),
+				newPosition.x,
 				0,
-				Math.max(
-					newPosition.x,
-					-(containerRect.width - viewerRect.width),
-				),
 			);
-			newPosition.y = Math.min(
+			newPosition.y = clamp(
+				-(containerRect.height - viewerRect.height),
+				newPosition.y,
 				0,
-				Math.max(
-					newPosition.y,
-					-(containerRect.height - viewerRect.height),
-				),
 			);
 		}
 
@@ -585,7 +540,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 		const $viewerRef = get(viewerRef);
 		const $containerRef = get(containerRef);
 		const $lockToBoundaries = get(lockToBoundaries);
-		const $ignoreScale = get(ignoreScaleStore);
+		const $ignoreScale = get(ignoreScale);
 		const oldScale = get(scale);
 
 		if (!$containerRef || !$viewerRef) return;
@@ -626,17 +581,15 @@ export function createViewer(props: CreateSVGViewerProps) {
 			// let newY = y;
 
 			if ($lockToBoundaries) {
-				newX = Math.min(
+				newX = clamp(
+					-(scaledContainerWidth - viewerRect.width),
+					newX,
 					0,
-					Math.max(newX, -(scaledContainerWidth - viewerRect.width)),
 				);
-
-				newY = Math.min(
+				newY = clamp(
+					-(scaledContainerHeight - viewerRect.height),
+					newY,
 					0,
-					Math.max(
-						newY,
-						-(scaledContainerHeight - viewerRect.height),
-					),
 				);
 			}
 
@@ -669,7 +622,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 
 		if (!$containerRef || !$viewerRef) return;
 
-		const $scale = get(scale);
+		const _scale = get(scale);
 
 		const { height: viewerHeight, width: viewerWidth } =
 			$viewerRef.getBoundingClientRect();
@@ -677,8 +630,8 @@ export function createViewer(props: CreateSVGViewerProps) {
 			$containerRef.getBoundingClientRect();
 
 		// initial container size
-		const initialContainerHeight = containerHeight / $scale;
-		const initialContainerWidth = containerWidth / $scale;
+		const initialContainerHeight = containerHeight / _scale;
+		const initialContainerWidth = containerWidth / _scale;
 
 		// calculate scale that needed to be set to fit container in the window
 		const scaleY = viewerHeight / initialContainerHeight;
@@ -696,7 +649,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 		}
 
 		if (!forceScale) {
-			newScale = Math.max(minScale, Math.min(maxScale, newScale));
+			newScale = clamp(minScale, newScale, maxScale);
 		}
 
 		scale.set(newScale);
@@ -748,11 +701,11 @@ export function createViewer(props: CreateSVGViewerProps) {
 	return {
 		states: {
 			position,
-			ignoreScale: ignoreScaleStore,
+			ignoreScale,
 			scale,
 			lockToBoundaries,
 			isMoving,
-			pinchBehavior: pinchBehaviorStore,
+			pinchBehavior,
 		},
 		listeners: {
 			onMouseDown,
