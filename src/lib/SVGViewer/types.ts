@@ -2,7 +2,7 @@ import type { CreateSVGViewerProps } from "$lib/internal/SVGViewer.js";
 
 export type Props = {
 	/**
-	 * Position value of the container inside the viewer.
+	 * The position value of the container inside the viewer.
 	 *
 	 * @example
 	 * ```svelte
@@ -12,7 +12,7 @@ export type Props = {
 	 *
 	 * 	let position = writable({x: 0, y: 0});
 	 * 	// or
-	 * 	let position = { x: 0, y: 0 };
+	 * 	let position = {x: 0, y: 0};
 	 * </script>
 	 *
 	 * <SVGViewer {position}>
@@ -26,7 +26,7 @@ export type Props = {
 	/**
 	 * The maximum value that viewer can zoom in to.
 	 *
-	 * **Note: scale changes respect `lockToBoundaries` prop**
+	 * **Note: scale changes respect `lockToBoundaries`/`defaultLockToBoundaries` prop**
 	 *
 	 * @example
 	 * ```svelte
@@ -47,7 +47,7 @@ export type Props = {
 	/**
 	 * The minimum value that viewer can zoom out to.
 	 *
-	 * **Note: scale changes respect `lockToBoundaries` prop.**
+	 * **Note: scale changes respect `lockToBoundaries`/`defaultLockToBoundaries` prop.**
 	 *
 	 * @example
 	 * ```svelte
@@ -66,8 +66,8 @@ export type Props = {
 	 */
 	minScale?: CreateSVGViewerProps["minScale"] & {};
 	/**
-	 * Value store for deciding whether
-	 * the viewer can ignore scale restrictions.
+	 * Value for deciding whether the viewer can
+	 * ignore scale restrictions.
 	 *
 	 * **Note: scale changes respect `lockToBoundaries` prop.**
 	 *
@@ -87,7 +87,7 @@ export type Props = {
 	 * </SVGViewer>
 	 * ```
 	 *
-	 * @default false
+	 * @default undefined
 	 */
 	ignoreScale?: CreateSVGViewerProps["ignoreScale"] & {};
 	/**
@@ -111,11 +111,11 @@ export type Props = {
 	 * </SVGViewer>
 	 * ```
 	 *
-	 * @default 1
+	 * @default undefined
 	 */
 	scale?: CreateSVGViewerProps["scale"] & {};
 	/**
-	 * The value for configuring scaling for the mouse zoom in/out.
+	 * Value for configuring scaling for the mouse zoom in/out.
 	 *
 	 * @example
 	 * ```svelte
@@ -134,7 +134,7 @@ export type Props = {
 	 */
 	scaleMouseSensitivity?: CreateSVGViewerProps["scaleMouseSensitivity"] & {};
 	/**
-	 * The value for configuring scaling for the touchpad zoom in/out.
+	 * Value for configuring scaling for the touchpad zoom in/out.
 	 *
 	 * @example
 	 * ```svelte
@@ -153,7 +153,8 @@ export type Props = {
 	 */
 	scaleTouchpadSensitivity?: CreateSVGViewerProps["scaleTouchpadSensitivity"] & {};
 	/**
-	 * Value for deciding whether the user can go out of bounds of the container.
+	 * Value for deciding whether the user can go
+	 * out of bounds of the container.
 	 *
 	 * @example
 	 * ```svelte
@@ -171,10 +172,12 @@ export type Props = {
 	 * </SVGViewer>
 	 * ```
 	 *
-	 * @default false
+	 * @default undefined
 	 */
 	lockToBoundaries?: CreateSVGViewerProps["lockToBoundaries"] & {};
 	/**
+	 * Value for action key.
+	 *
 	 * If provided, panning and zooming are disabled unless action key is pressed.
 	 *
 	 * @example
@@ -197,10 +200,11 @@ export type Props = {
 	 */
 	actionKey?: CreateSVGViewerProps["actionKey"] & {};
 	/**
-	 * Value store for pinch behavior.
+	 * Value for pinch behavior.
 	 *
-	 * Pinch behavior has two modes: zoom only and zoom drag. Zoom only allows
-	 * for zooming while pinching and zoom drag allows for both zooming and dragging.
+	 * Pinch behavior has two modes: zoom only and zoom drag.
+	 * * "zoom only" mode allows for zooming while pinching only;
+	 * * "zoom drag" mode allows for zooming while pinching and dragging.
 	 *
 	 * @example
 	 * ```svelte
@@ -210,7 +214,7 @@ export type Props = {
 	 *
 	 * 	let pinchBehavior = writable("zoomOnly");
 	 * 	// or
-	 * 	let pinchBehavior = "zoomOnly"
+	 * 	let pinchBehavior = "zoomOnly";
 	 * </script>
 	 *
 	 * <SVGViewer {pinchBehavior}>
@@ -221,4 +225,35 @@ export type Props = {
 	 * @default "zoomOnly"
 	 */
 	pinchBehavior?: CreateSVGViewerProps["pinchBehavior"] & {};
+	/**
+	 * Value for drag behavior.
+	 *
+	 * Drag behavior has two modes: normal and border reset.
+	 *
+	 * **Both of these reflect on dragging only when `lockToBoundaries` is true.**
+	 *
+	 * * "normal" mode does not reset offset when dragging past boundaries,
+	 * i.e. when you drag, hit border and drag further, you need to drag the
+	 * same distance, unless you stop dragging and start again;
+	 * * "border reset" mode does reset offset when dragging past boundaries.
+	 *
+	 * @example
+	 * ```svelte
+	 * <script>
+	 * 	import { writable } from "svelte/store";
+	 * 	import { SVGViewer } from "svelte-svg-viewer";
+	 *
+	 * 	let dragBehavior = writable("normal");
+	 * 	// or
+	 * 	let dragBehavior = "borderReset";
+	 * </script>
+	 *
+	 * <SVGViewer {dragBehavior}>
+	 * 	...
+	 * </SVGViewer>
+	 * ```
+	 *
+	 * @default "normal"
+	 */
+	dragBehavior?: CreateSVGViewerProps["dragBehavior"] & {};
 };
