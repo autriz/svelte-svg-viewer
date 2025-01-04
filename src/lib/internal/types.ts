@@ -1,6 +1,22 @@
 import type { createViewer } from "./SVGViewer.js";
 
+/**
+ * Pinch behavior has two modes: zoom only and zoom drag.
+ * * "zoom only" mode allows for zooming while pinching only;
+ * * "zoom drag" mode allows for zooming while pinching and dragging.
+ */
 export type PinchBehavior = "zoomDrag" | "zoomOnly";
+/**
+ * Drag behavior has two modes: normal and border reset.
+ *
+ * **Both of these reflect on dragging only when `lockToBoundaries` is true.**
+ *
+ * * "normal" mode does not reset offset when dragging past boundaries,
+ * i.e. when you drag, hit border and drag further, you need to drag the
+ * same distance, unless you stop dragging and start again;
+ * * "border reset" mode does reset offset when dragging past boundaries.
+ */
+export type DragBehavior = "normal" | "borderReset";
 
 export type Position = { x: number; y: number };
 

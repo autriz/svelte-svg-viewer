@@ -68,6 +68,7 @@
 					/>
 					<a
 						href="https://github.com/autriz/svelte-svg-viewer"
+						target="_blank"
 						class="flex gap-2 mt-5 rounded-md bg-primary px-4 py-3 text-md text-primary-foreground transition hover:bg-primary/90 active:translate-y-0.5"
 					>
 						<GithubMark

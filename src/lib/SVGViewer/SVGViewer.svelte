@@ -44,11 +44,9 @@
 		undefined;
 	export let lockToBoundaries: $$Props["lockToBoundaries"] = false;
 	export let actionKey: $$Props["actionKey"] = undefined;
-	/** TODO */
-	export let pinchBehavior: $$Props["pinchBehavior"] = undefined;
+	export let pinchBehavior: $$Props["pinchBehavior"] = "zoomOnly";
+	export let dragBehavior: $$Props["dragBehavior"] = "normal";
 	export let afterMount: $$Props["afterMount"] = undefined;
-	// export let bracketWidth: number;
-	// export let bracketHeight: number;
 	export { className as class };
 	export { svgClassName as svgClass };
 
@@ -83,16 +81,14 @@
 		lockToBoundaries,
 		actionKey,
 		pinchBehavior,
+		dragBehavior
 	});
 
 	export const methods = _methods;
 
-	// const viewerSize = writable({ height: 0, width: 0 });
-	// const initialViewerSize = writable({ height: 0, width: 0 });
-
 	let resizeObserver: ResizeObserver | undefined = undefined;
 
-	/** Converts value to '{value}px' if value is an integer, leaves as it is otherwise */
+	/** Converts value to '{value}px' if value is an integer, leaves as is otherwise */
 	const formatValue = (value: string | number | undefined) => Number.isInteger(value) ? `${value}px` : value;
 
 	onMount(() => {
@@ -122,21 +118,11 @@
 				);
 	
 				methods.panTo(newX, newY);
-	
-				// $viewerSize = {
-				// 	height: viewerRect.height,
-				// 	width: viewerRect.width,
-				// };
 			}
 
 			if (containerEntry && viewerEntry) {
 				const viewerRect = viewerEntry.contentRect;
 				const containerRect = containerEntry.contentRect;
-	
-				const scaledContainerSize = {
-					width: containerRect.width * (1 / $scaleState),
-					height: containerRect.height * (1 / $scaleState),
-				};
 	
 				// FIXME: invalid resizing
 	
@@ -168,11 +154,6 @@
 					methods.zoomOnCenter(
 						viewerRect.width / containerRect.width,
 					);
-
-				// $viewerSize = {
-				// 	height: viewerRect.height,
-				// 	width: viewerRect.width,
-				// };
 			}
 		});
 
@@ -180,13 +161,6 @@
 		if ($containerRef && $viewerRef) {
 			const containerRect = $containerRef.getBoundingClientRect();
 			const viewerRect = $viewerRef.getBoundingClientRect();
-
-			// $viewerSize = {
-			// 	height: viewerRect.height,
-			// 	width: viewerRect.width,
-			// };
-
-			// $initialViewerSize = $viewerSize;
 
 			// check if viewer is bigger than container
 			// also check for a adaptive container size (always 0 at the start)

@@ -202,8 +202,9 @@ export type Props = {
 	/**
 	 * Value for pinch behavior.
 	 *
-	 * Pinch behavior has two modes: zoom only and zoom drag. Zoom only allows
-	 * for zooming while pinching and zoom drag allows for both zooming and dragging.
+	 * Pinch behavior has two modes: zoom only and zoom drag.
+	 * * "zoom only" mode allows for zooming while pinching only;
+	 * * "zoom drag" mode allows for zooming while pinching and dragging.
 	 *
 	 * @example
 	 * ```svelte
@@ -221,7 +222,38 @@ export type Props = {
 	 * </SVGViewer>
 	 * ```
 	 *
-	 * @default undefined
+	 * @default "zoomOnly"
 	 */
 	pinchBehavior?: CreateSVGViewerProps["pinchBehavior"] & {};
+	/**
+	 * Value for drag behavior.
+	 *
+	 * Drag behavior has two modes: normal and border reset.
+	 *
+	 * **Both of these reflect on dragging only when `lockToBoundaries` is true.**
+	 *
+	 * * "normal" mode does not reset offset when dragging past boundaries,
+	 * i.e. when you drag, hit border and drag further, you need to drag the
+	 * same distance, unless you stop dragging and start again;
+	 * * "border reset" mode does reset offset when dragging past boundaries.
+	 *
+	 * @example
+	 * ```svelte
+	 * <script>
+	 * 	import { writable } from "svelte/store";
+	 * 	import { SVGViewer } from "svelte-svg-viewer";
+	 *
+	 * 	let dragBehavior = writable("normal");
+	 * 	// or
+	 * 	let dragBehavior = "borderReset";
+	 * </script>
+	 *
+	 * <SVGViewer {dragBehavior}>
+	 * 	...
+	 * </SVGViewer>
+	 * ```
+	 *
+	 * @default "normal"
+	 */
+	dragBehavior?: CreateSVGViewerProps["dragBehavior"] & {};
 };
