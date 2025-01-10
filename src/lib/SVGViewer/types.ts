@@ -26,7 +26,7 @@ export type Props = {
 	/**
 	 * The maximum value that viewer can zoom in to.
 	 *
-	 * **Note: scale changes respect `lockToBoundaries`/`defaultLockToBoundaries` prop**
+	 * **Note: scale changes respect `lockToBoundaries` prop**
 	 *
 	 * @example
 	 * ```svelte
@@ -47,7 +47,7 @@ export type Props = {
 	/**
 	 * The minimum value that viewer can zoom out to.
 	 *
-	 * **Note: scale changes respect `lockToBoundaries`/`defaultLockToBoundaries` prop.**
+	 * **Note: scale changes respect `lockToBoundaries` prop.**
 	 *
 	 * @example
 	 * ```svelte
