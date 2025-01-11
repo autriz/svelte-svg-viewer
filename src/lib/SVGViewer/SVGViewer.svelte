@@ -3,8 +3,9 @@
 	import type { HTMLAttributes } from "svelte/elements";
 	import { writable } from "svelte/store";
 	import type { SVGViewerMethods } from "$lib/internal/types.js";
-	import { setCtx } from "./ctx.js";
 	import type { Props } from "./types.js";
+	import { clamp } from "$lib/internal/index.js";
+	import { createViewer } from "$lib/internal/SVGViewer.js";
 
 	type TypedUnit =
 		`${number}${"em" | "rem" | "pt" | "%" | "px" | "vw" | "vh" | "lvw" | "lvh" | "dvw" | "dvh"}`;
@@ -25,6 +26,15 @@
 		class?: HTMLAttributes<HTMLDivElement>["class"];
 		svgClass?: HTMLAttributes<SVGElement>["class"];
 		style?: HTMLAttributes<HTMLDivElement>["style"];
+		methods?: SVGViewerMethods;
+		containerRect?: DOMRect;
+		viewerRect?: DOMRect;
+		/**
+		 * Resizing behavior in situations when height/width of viewer is bigger than container
+		 * 
+		 * @default "shrink"
+		 */
+		resizeBehavior?: "zoom" | "shrink";
 		afterMount?: (methods: SVGViewerMethods) => void;
 	};
 
@@ -33,31 +43,24 @@
 	export let style: $$Props["style"] = "";
 	export let height: $$Props["height"] = 500;
 	export let width: $$Props["width"] = 500;
-	export let position: $$Props["position"] = { x: 0, y: 0 };
-	export let maxScale: $$Props["maxScale"] = undefined;
-	export let minScale: $$Props["minScale"] = undefined;
-	export let ignoreScale: $$Props["ignoreScale"] = false;
-	export let scale: $$Props["scale"] = 1;
-	export let scaleMouseSensitivity: $$Props["scaleMouseSensitivity"] =
-		undefined;
-	export let scaleTouchpadSensitivity: $$Props["scaleTouchpadSensitivity"] =
-		undefined;
-	export let lockToBoundaries: $$Props["lockToBoundaries"] = false;
-	export let actionKey: $$Props["actionKey"] = undefined;
-	export let pinchBehavior: $$Props["pinchBehavior"] = "zoomOnly";
-	export let dragBehavior: $$Props["dragBehavior"] = "normal";
 	export let afterMount: $$Props["afterMount"] = undefined;
+	export let containerRect: $$Props["containerRect"] = undefined;
+	export let viewerRect: $$Props["viewerRect"] = undefined;
+	export let resizeBehavior: $$Props["resizeBehavior"] = "shrink";
 	export { className as class };
 	export { svgClassName as svgClass };
 
+	const viewerRef = writable<SVGSVGElement>();
+	const containerRef = writable<SVGGElement>();
+
 	let {
 		states: {
-			position: positionState,
-			scale: scaleState,
+			position,
+			scale,
 			isMoving,
-			lockToBoundaries: lockToBoundariesState,
+			lockToBoundaries,
 		},
-		methods: _methods,
+		methods,
 		listeners: {
 			onMouseDown,
 			onMouseMove,
@@ -69,91 +72,53 @@
 			onKeyDown,
 			onKeyUp,
 		},
-		refs: { viewerRef, containerRef },
-	} = setCtx({
-		position,
-		maxScale,
-		minScale,
-		ignoreScale,
-		scale,
-		scaleMouseSensitivity,
-		scaleTouchpadSensitivity,
-		lockToBoundaries,
-		actionKey,
-		pinchBehavior,
-		dragBehavior
+	} = createViewer({
+		...$$restProps,
+		viewerRef,
+		containerRef
 	});
 
-	export const methods = _methods;
+	export { methods };
 
-	let resizeObserver: ResizeObserver | undefined = undefined;
+	let resizeObserver: ResizeObserver;
 
 	/** Converts value to '{value}px' if value is an integer, leaves as is otherwise */
 	const formatValue = (value: string | number | undefined) => Number.isInteger(value) ? `${value}px` : value;
 
 	onMount(() => {
-		resizeObserver = resizeObserver && new ResizeObserver((entries) => {
+		resizeObserver = resizeObserver ?? new ResizeObserver((entries) => {
 			const findEntry = (id: string): ResizeObserverEntry | undefined => entries.find((entry) => entry.target.id === id);
 
 			let containerEntry: ResizeObserverEntry | undefined = findEntry($containerRef?.id!);
 			let viewerEntry: ResizeObserverEntry | undefined = findEntry($viewerRef?.id!);
 
-			if (containerEntry && $lockToBoundariesState) {
+			if (containerEntry && $lockToBoundaries) {
 				const viewerRect = viewerEntry ? viewerEntry.contentRect : $viewerRef?.getBoundingClientRect()!;
 				const containerRect = containerEntry.contentRect;
 
-				const newX = Math.min(
-					0,
-					Math.min(
-						-(containerRect.width - viewerRect.width),
-						$positionState.x,
-					),
+				const newX = clamp(
+					-(containerRect.width - viewerRect.width), 
+					$position.x, 
+					0
 				);
-				const newY = Math.min(
-					0,
-					Math.min(
-						-(containerRect.height - viewerRect.height),
-						$positionState.y,
-					),
+				const newY = clamp(
+					-(containerRect.height - viewerRect.height), 
+					$position.y, 
+					0
 				);
-	
+
 				methods.panTo(newX, newY);
 			}
 
-			if (containerEntry && viewerEntry) {
-				const viewerRect = viewerEntry.contentRect;
-				const containerRect = containerEntry.contentRect;
-	
-				// FIXME: invalid resizing
-	
-				// if (viewerRect.width > scaledContainerSize.width)
-				//     width = scaledContainerSize.width;
-				// else if (viewerRect.width < initialWidth)
-				//     width = initialWidth > scaledContainerSize.width ? scaledContainerSize.width : initialWidth;
-				// if (viewerRect.height > scaledContainerSize.height)
-				//     height = scaledContainerSize.height;
-				// else if (viewerRect.height < initialHeight)
-				//     height = initialHeight > scaledContainerSize.height ? scaledContainerSize.height : initialHeight;
+			if (containerEntry || viewerEntry) {
+				const viewerRect = viewerEntry 
+					? viewerEntry.contentRect 
+					: $viewerRef.getBoundingClientRect();
+				const containerRect = containerEntry 
+					? containerEntry.contentRect 
+					: $containerRef.getBoundingClientRect();
 
-				// TODO: maybe resizeBehavior prop?
-				if ($lockToBoundariesState) {
-					if (
-						viewerRect.width > containerRect.width &&
-						containerRect.width !== 0
-					)
-						width = containerRect.width;
-
-					if (
-						viewerRect.height > containerRect.height &&
-						containerRect.height !== 0
-					)
-						height = containerRect.height;
-				}
-
-				if (viewerRect.width > containerRect.width)
-					methods.zoomOnCenter(
-						viewerRect.width / containerRect.width,
-					);
+				checkRects(viewerRect, containerRect);
 			}
 		});
 
@@ -161,11 +126,27 @@
 		if ($containerRef && $viewerRef) {
 			const containerRect = $containerRef.getBoundingClientRect();
 			const viewerRect = $viewerRef.getBoundingClientRect();
+			
+			checkRects(viewerRect, containerRect);
 
-			// check if viewer is bigger than container
-			// also check for a adaptive container size (always 0 at the start)
-			// TODO (maybe): modes `shrink to fit`/`zoom to fit`, now it works in `shrink to fit` mode only
-			if ($lockToBoundariesState) {
+			resizeObserver.observe($containerRef);
+			resizeObserver.observe($viewerRef);
+
+			if (afterMount) afterMount(methods);
+		} else {
+			throw new Error(`Missing reference to container or/and viewer`);
+		};
+
+		return () => {
+			resizeObserver.disconnect();
+		};
+	});
+
+	// check if viewer is bigger than container
+	// also check for an adaptive container size (always 0 at the start)
+	function checkRects(viewerRect: DOMRect, containerRect: DOMRect) {
+		if ($lockToBoundaries) {
+			if (resizeBehavior === "shrink") {
 				if (
 					viewerRect.width > containerRect.width &&
 					containerRect.width !== 0
@@ -177,20 +158,17 @@
 					containerRect.height !== 0
 				)
 					height = containerRect.height;
+			} else {
+				if (
+					(viewerRect.width > containerRect.width &&
+					containerRect.width !== 0) || 
+					(viewerRect.height > containerRect.height &&
+					containerRect.height !== 0)
+				)
+					methods.fitToViewer();
 			}
-
-			resizeObserver?.observe($containerRef);
-			resizeObserver?.observe($viewerRef);
-
-			if (afterMount) afterMount(methods);
-		} else {
-			throw new Error(`Missing reference to container or/and viewer`);
-		};
-
-		return () => {
-			resizeObserver?.disconnect();
-		};
-	});
+		}
+	}
 </script>
 
 <svelte:window on:keydown={onKeyDown} on:keyup={onKeyUp} />
@@ -211,9 +189,11 @@
 	<!-- svelte-ignore a11y-no-static-element-interactions -->
 	<!-- svelte-ignore a11y-click-events-have-key-events -->
 	<svg
+		id="svg-viewer"
 		class={svgClassName}
 		{width}
 		{height}
+		bind:contentRect={viewerRect}
 		bind:this={$viewerRef}
 		on:mousedown={onMouseDown}
 		on:mousemove={onMouseMove}
@@ -227,9 +207,10 @@
 	>
 		<rect x={0} y={0} {width} {height} style="pointer-events: none;" />
 		<g
+			id="svg-container"
 			bind:this={$containerRef}
-			transform="translate({$positionState.x} {$positionState.y}), scale({$scaleState})"
-			style={$isMoving ? "pointer-events: none;" : ""}
+			bind:contentRect={containerRect}
+			style="transform: translate3d({$position.x}px, {$position.y}px, 0px) scale3d({$scale}, {$scale}, {$scale}); {$isMoving ? "pointer-events: none;" : ""}"
 		>
 			<slot />
 		</g>
