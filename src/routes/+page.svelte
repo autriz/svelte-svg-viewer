@@ -6,10 +6,12 @@
 	import GithubMark from "$components/GithubMark.svelte";
 	import CopyButton from "$components/CopyButton.svelte";
 	import { browser, dev } from "$app/environment";
-	import { Moon, Sun } from "lucide-svelte";
+	import { Moon, Sun, Maximize2, SquareDashedMousePointer, Lock, LockOpen, ZoomOut } from "lucide-svelte";
 	import { setMode, mode } from "mode-watcher";
 	import { writable } from "svelte/store";
 
+	let containerRect: DOMRect;
+	let viewerRect: DOMRect;
 	let methods: SVGViewerMethods;
 	let heroEl: HTMLDivElement;
 
@@ -27,8 +29,15 @@
 		}
 	}
 
-	let lockToBoundaries = dev ? writable(true) : true;
-	let scale = dev ? writable(1) : 1;
+	let position = writable({ x: 0, y: 0 });
+	let lockToBoundaries = writable(true);
+	let scale = writable(1);
+
+	$: outOfBounds = 
+		$position.x > 1 || $position.x < -(containerRect?.width) * $scale || 
+		($position.x - viewerRect?.width) < -(containerRect?.width * $scale) - 1 ||
+		$position.y > 1 || $position.y < -(containerRect?.height * $scale) ||
+		($position.y - viewerRect?.height) < -(containerRect?.height * $scale) - 1;
 
 	onMount(() => {
 		mounted = true;
@@ -43,8 +52,12 @@
 	maxScale={5}
 	{lockToBoundaries}
 	{scale}
+	{position}
 	svgClass="fill-transparent"
+	pinchBehavior="zoomDrag"
 	afterMount={(methods) => methods.center()}
+	bind:containerRect
+	bind:viewerRect
 	bind:methods
 >
 	<foreignObject width="140vw" height="140vh">
@@ -119,34 +132,62 @@
 	</foreignObject>
 </SVGViewer>
 
-{#if dev}
-	<div class="absolute bottom-0 right-0 flex w-fit flex-col gap-2 p-3 z-10">
-		<button
-			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
-			on:click={() => methods.fitToViewer()}
-		>
+{#if outOfBounds}
+	<button 
+		transition:fly={{duration: 250, y: -10}} 
+		class="absolute bottom-10 right-0 left-0 w-fit mx-auto rounded-xl
+			border border-border mb-4 py-1 px-2 text-foreground transition 
+			bg-accent hover:border-foreground/20"
+		on:click={() => methods.center()}
+	>
+		<p>Go back</p>
+	</button>
+{/if}
+
+<div class="absolute bottom-0 right-0 flex w-fit flex-col gap-2 p-3 z-10">
+	<button
+		class="tooltip-root rounded-md border border-border flex flex-row justify-between p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
+		on:click={() => methods.fitToViewer()}
+	>
+		<Maximize2 />
+		<span tabindex="-1" role="tooltip" class="tooltip left bg-primary-foreground text-foreground">
 			.fitToViewer()
-		</button>
+		</span>
+	</button>
+	<button
+		class="tooltip-root rounded-md border border-border flex flex-row justify-between p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
+		on:click={() => $lockToBoundaries = !$lockToBoundaries}
+	>
+		{#if $lockToBoundaries}
+			<Lock />
+		{:else}
+			<LockOpen />
+		{/if}
+		<span tabindex="-1" role="tooltip" class="tooltip left bg-primary-foreground text-foreground">
+			{$lockToBoundaries ? "Unlock" : "Lock"} boundaries
+		</span>
+	</button>
+	{#if dev}
 		<button
-			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
+			class="tooltip-root rounded-md border border-border flex flex-row justify-between p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
 			on:click={() => methods.fitSelection(40, 40, 200, 200)}
 		>
-			.fitToSelection(40, 40, 200, 200)
+			<SquareDashedMousePointer />
+			<span tabindex="-1" role="tooltip" class="tooltip left bg-primary-foreground text-foreground">
+				.fitToSelection(40, 40, 200, 200)
+			</span>
 		</button>
 		<button
-			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
-			on:click={() => $lockToBoundaries = !$lockToBoundaries}
-		>
-			{$lockToBoundaries ? "Unlock" : "Lock"} boundaries
-		</button>
-		<button
-			class="rounded-md border border-border p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
+			class="tooltip-root rounded-md border border-border flex flex-row justify-between p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
 			on:click={() => $scale = .6}
 		>
-			Set scale to .6
+			<ZoomOut />
+			<span tabindex="-1" role="tooltip" class="tooltip left bg-primary-foreground text-foreground">
+				Set scale to .6
+			</span>
 		</button>
-	</div>
-{/if}
+	{/if}
+</div>
 
 <style>
 	#hero {
@@ -202,4 +243,28 @@
 			opacity: 1;
 		}
 	}
+
+	.tooltip-root {
+        position: relative;
+    }
+
+    .tooltip-root .tooltip {
+		width: fit-content;
+        position: absolute;
+        transition: opacity 150ms 75ms;
+        text-align: center;
+        padding: 6px 6px;
+        border-radius: 6px;
+        
+		right: 110%;
+        bottom: 6px;
+
+        opacity: 0;
+        visibility: hidden;
+    }
+
+    .tooltip-root:hover .tooltip {
+        opacity: 1;
+        visibility: visible;
+    }
 </style>
