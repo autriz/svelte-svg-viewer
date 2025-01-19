@@ -1,15 +1,13 @@
 <script lang="ts">
 	import { AlertCircle, Check, Copy } from "lucide-svelte";
+	import type { HTMLAttributes } from "svelte/elements";
 	import { fly } from "svelte/transition";
 
-	interface Props {
+	type Props = HTMLAttributes<HTMLButtonElement> & {
 		text: string;
-		class?: HTMLButtonElement["className"];
 	}
 
-	let { text, class: className = "" }: Props = $props();
-
-	
+	let { text, ...props }: Props = $props();
 
 	enum CopyStatus {
 		COPIED,
@@ -36,8 +34,8 @@
 </script>
 
 <button
+	{...props}
 	onclick={copyInstallCommand}
-	class={className}
 	aria-label="Copy button"
 >
 	<span>{text}</span>

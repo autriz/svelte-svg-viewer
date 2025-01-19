@@ -15,10 +15,12 @@ const config = {
 			"$components/*": "src/components/*",
 			$routes: "src/routes",
 			"$routes/*": "src/routes/*",
+			$images: "src/images",
+			"$images/*": "src/images/*",
 		},
 		paths: {
-			base: process.argv.includes("dev") ? '' : process.env.BASE_PATH
-		}
+			base: process.argv.includes("dev") ? "" : process.env.BASE_PATH,
+		},
 	},
 };
 export default config;
