@@ -26,9 +26,15 @@
 		class?: HTMLAttributes<HTMLDivElement>["class"];
 		svgClass?: HTMLAttributes<SVGElement>["class"];
 		style?: HTMLAttributes<HTMLDivElement>["style"];
-		methods?: SVGViewerMethods;
-		containerRect?: DOMRect;
-		viewerRect?: DOMRect;
+		readonly methods?: SVGViewerMethods;
+		/**
+		 * Read-only size and position of a container rectangle
+		 */
+		readonly containerRect?: DOMRect;
+		/**
+		 * Read-only size and position of a viewer rectangle
+		 */
+		readonly viewerRect?: DOMRect;
 		/**
 		 * Resizing behavior in situations when height/width of viewer is bigger than container
 		 * 
@@ -142,8 +148,6 @@
 		};
 	});
 
-	// check if viewer is bigger than container
-	// also check for an adaptive container size (always 0 at the start)
 	function checkRects(viewerRect: DOMRect, containerRect: DOMRect) {
 		if ($lockToBoundaries) {
 			if (resizeBehavior === "shrink") {
@@ -210,9 +214,16 @@
 			id="svg-container"
 			bind:this={$containerRef}
 			bind:contentRect={containerRect}
-			style="transform: translate3d({$position.x}px, {$position.y}px, 0px) scale3d({$scale}, {$scale}, {$scale}); {$isMoving ? "pointer-events: none;" : ""}"
+			data-moving={$isMoving ? "" : undefined}
+			style="transform: translate3d({$position.x}px, {$position.y}px, 0px) scale3d({$scale}, {$scale}, {$scale});"
 		>
 			<slot />
 		</g>
 	</svg>
 </div>
+
+<style>
+	[data-moving] {
+		pointer-events: none;
+	}
+</style>

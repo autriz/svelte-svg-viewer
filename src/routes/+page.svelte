@@ -6,9 +6,9 @@
 	import GithubMark from "$components/GithubMark.svelte";
 	import CopyButton from "$components/CopyButton.svelte";
 	import { browser, dev } from "$app/environment";
-	import { Moon, Sun, Maximize2, SquareDashedMousePointer, Lock, LockOpen, ZoomOut } from "lucide-svelte";
-	import { setMode, mode } from "mode-watcher";
+	import { Maximize2, SquareDashedMousePointer, Lock, LockOpen, ZoomOut } from "lucide-svelte";
 	import { writable } from "svelte/store";
+	import ThemeToggleButton from "$components/ThemeToggleButton.svelte";
 
 	let containerRect: DOMRect;
 	let viewerRect: DOMRect;
@@ -20,11 +20,7 @@
 	let isFirstTimeLoad = false;
 
 	if (browser) {
-		const firstTimeLoad = sessionStorage.getItem("firstTimeLoad");
-
-		isFirstTimeLoad = !firstTimeLoad ? true : false;
-
-		if (isFirstTimeLoad) {
+		if (isFirstTimeLoad = !sessionStorage.getItem("firstTimeLoad")) {
 			sessionStorage.setItem("firstTimeLoad", "done");
 		}
 	}
@@ -67,7 +63,7 @@
 				class="flex h-full w-full flex-col items-center justify-center"
 				bind:this={heroEl}
 			>
-				<div class="grow" />
+				<div class="grow"></div>
 				<div class="flex flex-col items-center justify-center">
 					<h1 class="text-5xl">Svelte SVG Viewer</h1>
 					<p class="mt-2 text-lg text-secondary-foreground/80">
@@ -95,37 +91,14 @@
 				<div class="flex grow flex-col items-center justify-center">
 					{#if mounted}
 						<p
-							in:fade={{
-								duration: isFirstTimeLoad ? 2000 : 0,
-							}}
+							in:fade={{ duration: isFirstTimeLoad ? 2000 : 0 }}
 						>
 							Try to zoom and drag around :)
 						</p>
 					{/if}
 				</div>
 				<footer class="z-10 flex flex-row gap-4">
-					<button
-						class="z-10 mb-5"
-						on:click={() => { $mode === "dark" ? setMode("light") : setMode("dark") }}
-					>
-						{#if $mode === "dark"}
-							<div
-								in:fly={{duration: 250, delay: 250, y: -5}}
-							>
-								<Moon 
-									class="h-7 w-7 fill-[#24292f] dark:fill-[#fff]"
-								/>
-							</div>
-						{:else}
-							<div
-								in:fly={{duration: 250, delay: 250, y: -5}}
-							>
-								<Sun
-									class="h-7 w-7 fill-[#24292f] dark:fill-[#fff]"
-								/>
-							</div>
-						{/if}
-				</button>
+					<ThemeToggleButton />
 				</footer>
 			</div>
 		</div>
