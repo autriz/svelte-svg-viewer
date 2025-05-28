@@ -595,6 +595,8 @@ export function createViewer(props: CreateSVGViewerProps) {
 			newScale = clamp(minScale, newScale, maxScale);
 		}
 
+		if (Math.abs($scale - newScale) <= 0.0001) return;
+
 		scale.set(newScale);
 		position.set({ x: 0, y: 0 });
 	}
