@@ -37,8 +37,7 @@ soon™
 
 # Props
 
-Almost all props have controllable and uncontrollable (i.e. default) versions,
-where controllable use stores and uncontrollable use raw values:
+Almost all props can take writable stores or raw values, which makes them controllable or uncontrollable:
 
 ```svelte
 <script>
@@ -47,17 +46,14 @@ where controllable use stores and uncontrollable use raw values:
 
 	// This is a default version. It cannot 
 	// be modified after component initialization.
-	const defaultActionKey = "Control";
-
+	const actionKey = "Control";
+	
 	// And this is controllable version. It can be modified.
 	// Also, if used, it overrides default version.
 	const actionKey = writable("Control"); 
 </script>
 
-<SVGViewer 
-	{defaultActionKey} 
-	{actionKey}
->
+<SVGViewer {actionKey}>
 	...
 </SVGViewer>
 ```
