@@ -584,7 +584,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 
 		if ($lockToBoundaries) {
 			newScale = [scaleX, scaleY].reduce((prev, curr) =>
-				Math.abs(curr - 1) > Math.abs(prev - 1) ? curr : prev,
+				Math.abs(curr * 10 - 1) > Math.abs(prev * 10 - 1) ? curr : prev,
 			);
 		} else {
 			// if not locked this should do the trick
