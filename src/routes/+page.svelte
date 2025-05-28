@@ -6,7 +6,13 @@
 	import GithubMark from "$components/GithubMark.svelte";
 	import CopyButton from "$components/CopyButton.svelte";
 	import { browser, dev } from "$app/environment";
-	import { Maximize2, SquareDashedMousePointer, Lock, LockOpen, ZoomOut } from "lucide-svelte";
+	import {
+		Maximize2,
+		SquareDashedMousePointer,
+		Lock,
+		LockOpen,
+		ZoomOut,
+	} from "lucide-svelte";
 	import { writable } from "svelte/store";
 	import ThemeToggleButton from "$components/ThemeToggleButton.svelte";
 
@@ -20,7 +26,7 @@
 	let isFirstTimeLoad = false;
 
 	if (browser) {
-		if (isFirstTimeLoad = !sessionStorage.getItem("firstTimeLoad")) {
+		if ((isFirstTimeLoad = !sessionStorage.getItem("firstTimeLoad"))) {
 			sessionStorage.setItem("firstTimeLoad", "done");
 		}
 	}
@@ -29,15 +35,19 @@
 	let lockToBoundaries = writable(true);
 	let scale = writable(1);
 
-	$: outOfBounds = 
-		$position.x > 1 || $position.x < -(containerRect?.width) * $scale || 
-		($position.x - viewerRect?.width) < -(containerRect?.width * $scale) - 1 ||
-		$position.y > 1 || $position.y < -(containerRect?.height * $scale) ||
-		($position.y - viewerRect?.height) < -(containerRect?.height * $scale) - 1;
+	$: outOfBounds =
+		$position.x > 1 ||
+		$position.x < -containerRect?.width * $scale ||
+		$position.x - viewerRect?.width <
+			-(containerRect?.width * $scale) - 1 ||
+		$position.y > 1 ||
+		$position.y < -(containerRect?.height * $scale) ||
+		$position.y - viewerRect?.height <
+			-(containerRect?.height * $scale) - 1;
 
 	onMount(() => {
 		mounted = true;
-		
+
 		if (isFirstTimeLoad) heroEl.classList.add("hero-animated");
 	});
 </script>
@@ -72,27 +82,23 @@
 					<CopyButton
 						class="mt-8 flex items-center justify-between gap-4 break-keep rounded-md border
 							border-border bg-background px-4 py-3 text-left font-mono text-sm text-foreground
-							transition hover:bg-accent active:translate-y-0.5 sm:shrink disabled:active:translate-y-0 disabled:text-muted-foreground"
+							transition hover:bg-accent active:translate-y-0.5 disabled:text-muted-foreground disabled:active:translate-y-0 sm:shrink"
 						text="npm install svelte-svg-viewer"
 					/>
 					<a
 						href="https://github.com/autriz/svelte-svg-viewer"
 						target="_blank"
-						class="flex gap-2 mt-5 rounded-md bg-primary px-4 py-3 text-md text-primary-foreground transition hover:bg-primary/90 active:translate-y-0.5"
+						class="text-md mt-5 flex gap-2 rounded-md bg-primary px-4 py-3 text-primary-foreground transition hover:bg-primary/90 active:translate-y-0.5"
 					>
 						<GithubMark
 							class="h-6 w-6 fill-[#24292f] dark:fill-[#fff]"
 						/>
-						<p>
-							GitHub
-						</p>
+						<p>GitHub</p>
 					</a>
 				</div>
 				<div class="flex grow flex-col items-center justify-center">
 					{#if mounted}
-						<p
-							in:fade={{ duration: isFirstTimeLoad ? 2000 : 0 }}
-						>
+						<p in:fade={{ duration: isFirstTimeLoad ? 2000 : 0 }}>
 							Try to zoom and drag around :)
 						</p>
 					{/if}
@@ -106,56 +112,72 @@
 </SVGViewer>
 
 {#if outOfBounds}
-	<button 
-		transition:fly={{duration: 250, y: -10}} 
-		class="absolute bottom-10 right-0 left-0 w-fit mx-auto rounded-xl
-			border border-border mb-4 py-1 px-2 text-foreground transition 
-			bg-accent hover:border-foreground/20"
+	<button
+		transition:fly={{ duration: 250, y: -10 }}
+		class="absolute bottom-10 left-0 right-0 mx-auto mb-4 w-fit
+			rounded-xl border border-border bg-accent px-2 py-1 text-foreground
+			transition hover:border-foreground/20"
 		on:click={() => methods.center()}
 	>
 		<p>Go back</p>
 	</button>
 {/if}
 
-<div class="absolute bottom-0 right-0 flex w-fit flex-col gap-2 p-3 z-10">
+<div class="absolute bottom-0 right-0 z-10 flex w-fit flex-col gap-2 p-3">
 	<button
-		class="tooltip-root rounded-md border border-border flex flex-row justify-between p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
+		class="tooltip-root flex flex-row justify-between rounded-md border border-border p-3 text-foreground transition hover:border-foreground/20 hover:bg-accent"
 		on:click={() => methods.fitToViewer()}
 	>
 		<Maximize2 />
-		<span tabindex="-1" role="tooltip" class="tooltip left bg-primary-foreground text-foreground">
+		<span
+			tabindex="-1"
+			role="tooltip"
+			class="tooltip left bg-primary-foreground text-foreground"
+		>
 			.fitToViewer()
 		</span>
 	</button>
 	<button
-		class="tooltip-root rounded-md border border-border flex flex-row justify-between p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
-		on:click={() => $lockToBoundaries = !$lockToBoundaries}
+		class="tooltip-root flex flex-row justify-between rounded-md border border-border p-3 text-foreground transition hover:border-foreground/20 hover:bg-accent"
+		on:click={() => ($lockToBoundaries = !$lockToBoundaries)}
 	>
 		{#if $lockToBoundaries}
 			<Lock />
 		{:else}
 			<LockOpen />
 		{/if}
-		<span tabindex="-1" role="tooltip" class="tooltip left bg-primary-foreground text-foreground">
+		<span
+			tabindex="-1"
+			role="tooltip"
+			class="tooltip left bg-primary-foreground text-foreground"
+		>
 			{$lockToBoundaries ? "Unlock" : "Lock"} boundaries
 		</span>
 	</button>
 	{#if dev}
 		<button
-			class="tooltip-root rounded-md border border-border flex flex-row justify-between p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
+			class="tooltip-root flex flex-row justify-between rounded-md border border-border p-3 text-foreground transition hover:border-foreground/20 hover:bg-accent"
 			on:click={() => methods.fitSelection(40, 40, 200, 200)}
 		>
 			<SquareDashedMousePointer />
-			<span tabindex="-1" role="tooltip" class="tooltip left bg-primary-foreground text-foreground">
+			<span
+				tabindex="-1"
+				role="tooltip"
+				class="tooltip left bg-primary-foreground text-foreground"
+			>
 				.fitToSelection(40, 40, 200, 200)
 			</span>
 		</button>
 		<button
-			class="tooltip-root rounded-md border border-border flex flex-row justify-between p-3 text-foreground transition hover:bg-accent hover:border-foreground/20"
-			on:click={() => $scale = .6}
+			class="tooltip-root flex flex-row justify-between rounded-md border border-border p-3 text-foreground transition hover:border-foreground/20 hover:bg-accent"
+			on:click={() => ($scale = 0.6)}
 		>
 			<ZoomOut />
-			<span tabindex="-1" role="tooltip" class="tooltip left bg-primary-foreground text-foreground">
+			<span
+				tabindex="-1"
+				role="tooltip"
+				class="tooltip left bg-primary-foreground text-foreground"
+			>
 				Set scale to .6
 			</span>
 		</button>
@@ -218,26 +240,26 @@
 	}
 
 	.tooltip-root {
-        position: relative;
-    }
+		position: relative;
+	}
 
-    .tooltip-root .tooltip {
+	.tooltip-root .tooltip {
 		width: fit-content;
-        position: absolute;
-        transition: opacity 150ms 75ms;
-        text-align: center;
-        padding: 6px 6px;
-        border-radius: 6px;
-        
+		position: absolute;
+		transition: opacity 150ms 75ms;
+		text-align: center;
+		padding: 6px 6px;
+		border-radius: 6px;
+
 		right: 110%;
-        bottom: 6px;
+		bottom: 6px;
 
-        opacity: 0;
-        visibility: hidden;
-    }
+		opacity: 0;
+		visibility: hidden;
+	}
 
-    .tooltip-root:hover .tooltip {
-        opacity: 1;
-        visibility: visible;
-    }
+	.tooltip-root:hover .tooltip {
+		opacity: 1;
+		visibility: visible;
+	}
 </style>

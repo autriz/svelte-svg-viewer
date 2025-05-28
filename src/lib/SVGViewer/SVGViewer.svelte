@@ -11,15 +11,15 @@
 		`${number}${"em" | "rem" | "pt" | "%" | "px" | "vw" | "vh" | "lvw" | "lvh" | "dvw" | "dvh"}`;
 
 	type $$Props = Props & {
-		/** 
-		 * Height of the viewer 
-		 * 
+		/**
+		 * Height of the viewer
+		 *
 		 * @default 500
 		 */
 		height?: number | string | TypedUnit;
-		/** 
-		 * Width of the viewer 
-		 * 
+		/**
+		 * Width of the viewer
+		 *
 		 * @default 500
 		 */
 		width?: number | string | TypedUnit;
@@ -37,7 +37,7 @@
 		readonly viewerRect?: DOMRect;
 		/**
 		 * Resizing behavior in situations when height/width of viewer is bigger than container
-		 * 
+		 *
 		 * @default "shrink"
 		 */
 		resizeBehavior?: "zoom" | "shrink";
@@ -60,12 +60,7 @@
 	const containerRef = writable<SVGGElement>();
 
 	let {
-		states: {
-			position,
-			scale,
-			isMoving,
-			lockToBoundaries,
-		},
+		states: { position, scale, isMoving, lockToBoundaries },
 		methods,
 		listeners: {
 			onMouseDown,
@@ -81,7 +76,7 @@
 	} = createViewer({
 		...$$restProps,
 		viewerRef,
-		containerRef
+		containerRef,
 	});
 
 	export { methods };
@@ -89,50 +84,62 @@
 	let resizeObserver: ResizeObserver;
 
 	/** Converts value to '{value}px' if value is an integer, leaves as is otherwise */
-	const formatValue = (value: string | number | undefined) => Number.isInteger(value) ? `${value}px` : value;
+	const formatValue = (value: string | number | undefined) =>
+		Number.isInteger(value) ? `${value}px` : value;
 
 	onMount(() => {
-		resizeObserver = resizeObserver ?? new ResizeObserver((entries) => {
-			const findEntry = (id: string): ResizeObserverEntry | undefined => entries.find((entry) => entry.target.id === id);
+		resizeObserver =
+			resizeObserver ??
+			new ResizeObserver((entries) => {
+				const findEntry = (
+					id: string,
+				): ResizeObserverEntry | undefined =>
+					entries.find((entry) => entry.target.id === id);
 
-			let containerEntry: ResizeObserverEntry | undefined = findEntry($containerRef?.id!);
-			let viewerEntry: ResizeObserverEntry | undefined = findEntry($viewerRef?.id!);
-
-			if (containerEntry && $lockToBoundaries) {
-				const viewerRect = viewerEntry ? viewerEntry.contentRect : $viewerRef?.getBoundingClientRect()!;
-				const containerRect = containerEntry.contentRect;
-
-				const newX = clamp(
-					-(containerRect.width - viewerRect.width), 
-					$position.x, 
-					0
+				let containerEntry: ResizeObserverEntry | undefined = findEntry(
+					$containerRef?.id!,
 				);
-				const newY = clamp(
-					-(containerRect.height - viewerRect.height), 
-					$position.y, 
-					0
+				let viewerEntry: ResizeObserverEntry | undefined = findEntry(
+					$viewerRef?.id!,
 				);
 
-				methods.panTo(newX, newY);
-			}
+				if (containerEntry && $lockToBoundaries) {
+					const viewerRect = viewerEntry
+						? viewerEntry.contentRect
+						: $viewerRef?.getBoundingClientRect()!;
+					const containerRect = containerEntry.contentRect;
 
-			if (containerEntry || viewerEntry) {
-				const viewerRect = viewerEntry 
-					? viewerEntry.contentRect 
-					: $viewerRef.getBoundingClientRect();
-				const containerRect = containerEntry 
-					? containerEntry.contentRect 
-					: $containerRef.getBoundingClientRect();
+					const newX = clamp(
+						-(containerRect.width - viewerRect.width),
+						$position.x,
+						0,
+					);
+					const newY = clamp(
+						-(containerRect.height - viewerRect.height),
+						$position.y,
+						0,
+					);
 
-				checkRects(viewerRect, containerRect);
-			}
-		});
+					methods.panTo(newX, newY);
+				}
+
+				if (containerEntry || viewerEntry) {
+					const viewerRect = viewerEntry
+						? viewerEntry.contentRect
+						: $viewerRef.getBoundingClientRect();
+					const containerRect = containerEntry
+						? containerEntry.contentRect
+						: $containerRef.getBoundingClientRect();
+
+					checkRects(viewerRect, containerRect);
+				}
+			});
 
 		// resize if container is smaller than viewer
 		if ($containerRef && $viewerRef) {
 			const containerRect = $containerRef.getBoundingClientRect();
 			const viewerRect = $viewerRef.getBoundingClientRect();
-			
+
 			checkRects(viewerRect, containerRect);
 
 			resizeObserver.observe($containerRef);
@@ -141,7 +148,7 @@
 			if (afterMount) afterMount(methods);
 		} else {
 			throw new Error(`Missing reference to container or/and viewer`);
-		};
+		}
 
 		return () => {
 			resizeObserver.disconnect();
@@ -165,9 +172,9 @@
 			} else {
 				if (
 					(viewerRect.width > containerRect.width &&
-					containerRect.width !== 0) || 
+						containerRect.width !== 0) ||
 					(viewerRect.height > containerRect.height &&
-					containerRect.height !== 0)
+						containerRect.height !== 0)
 				)
 					methods.fitToViewer();
 			}
