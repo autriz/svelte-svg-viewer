@@ -87,7 +87,7 @@ export type Props = {
 	 * </SVGViewer>
 	 * ```
 	 *
-	 * @default undefined
+	 * @default false
 	 */
 	ignoreScale?: CreateSVGViewerProps["ignoreScale"] & {};
 	/**
@@ -111,7 +111,7 @@ export type Props = {
 	 * </SVGViewer>
 	 * ```
 	 *
-	 * @default undefined
+	 * @default 1
 	 */
 	scale?: CreateSVGViewerProps["scale"] & {};
 	/**
@@ -172,7 +172,7 @@ export type Props = {
 	 * </SVGViewer>
 	 * ```
 	 *
-	 * @default undefined
+	 * @default false
 	 */
 	lockToBoundaries?: CreateSVGViewerProps["lockToBoundaries"] & {};
 	/**
