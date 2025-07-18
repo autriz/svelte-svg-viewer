@@ -15,11 +15,22 @@
 	let copyStatus: CopyStatus | null = null;
 	let copyTimeout: ReturnType<typeof setTimeout>;
 
-	function copyInstallCommand() {
-		if (navigator.clipboard) {
-			navigator.clipboard.writeText(text);
+	async function copyInstallCommand() {
+		try {
+			if (navigator.clipboard) {
+				await navigator.clipboard.writeText(text);
+			} else {
+				// Fallback for older browsers
+				const textArea = document.createElement("textarea");
+				textArea.value = text;
+				document.body.appendChild(textArea);
+				textArea.select();
+				document.execCommand("copy");
+				document.body.removeChild(textArea);
+			}
 			copyStatus = CopyStatus.COPIED;
-		} else {
+		} catch (error) {
+			console.error("Failed to copy text:", error);
 			copyStatus = CopyStatus.FAILED;
 		}
 
@@ -34,7 +45,8 @@
 <button
 	on:click={copyInstallCommand}
 	class={className}
-	aria-label="Copy button"
+	aria-label="Copy to clipboard"
+	type="button"
 >
 	<span>{text}</span>
 	{#if copyStatus === CopyStatus.COPIED}
