@@ -1,4 +1,4 @@
-import { type Writable, type Updater, writable } from "svelte/store";
+import { type Writable, writable } from "svelte/store";
 
 export type MaybeWritable<T> = Writable<T> | T;
 export type Extracted<T> =

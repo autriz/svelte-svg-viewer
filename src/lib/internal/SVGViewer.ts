@@ -18,8 +18,10 @@ import {
 	getMousePosition,
 	getPinchCenter,
 	getPinchDistance,
+	getPinchPosition,
 	getTouchPosition,
 	isPinchGesture,
+	posSubtract,
 } from "./helpers/functions.js";
 
 export type CreateSVGViewerProps = {
@@ -32,6 +34,7 @@ export type CreateSVGViewerProps = {
 	scaleTouchpadSensitivity?: number;
 	lockToBoundaries?: MaybeWritable<boolean>;
 	actionKey?: MaybeWritable<Key>;
+	disabled?: MaybeWritable<boolean>;
 	pinchBehavior?: MaybeWritable<PinchBehavior>;
 	dragBehavior?: MaybeWritable<DragBehavior>;
 	viewerRef: Writable<SVGSVGElement | undefined>;
@@ -48,6 +51,7 @@ const defaultProps = {
 	scaleTouchpadSensitivity: 1.06,
 	lockToBoundaries: false,
 	actionKey: undefined,
+	disabled: undefined,
 	pinchBehavior: "zoomOnly",
 	dragBehavior: "normal",
 } as const;
@@ -71,11 +75,9 @@ export function createViewer(props: CreateSVGViewerProps) {
 		omit({ ...withDefaults }, ...omittedOptions),
 	);
 
-	// TODO: maybe make both maxScale and minScale controllable
-	// TODO: also probably should change minScale
-	// if container is small for that scale
-	// But that will be applicable when lockToBoundaries
-	// is true, otherwise changing it is useless
+	// TODO: Consider making maxScale and minScale controllable
+	// TODO: Consider adjusting minScale when container is small for that scale
+	// This would be applicable when lockToBoundaries is true
 	const minScale = withDefaults.minScale;
 	const maxScale = withDefaults.maxScale;
 	const scaleMouseSensitivity = withDefaults.scaleMouseSensitivity;
@@ -86,6 +88,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 	const scale = options.scale;
 	const lockToBoundaries = options.lockToBoundaries;
 	const actionKey = options.actionKey;
+	const disabled = options.disabled;
 	const pinchBehavior = options.pinchBehavior;
 	const dragBehavior = options.dragBehavior;
 
@@ -136,7 +139,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 
 		const clampedScale = clamp(minScale, newScale, maxScale);
 
-		if (clampedScale !== newScale) {
+		if (Math.abs(clampedScale - newScale) > 0.0001) {
 			scale.set(clampedScale);
 		}
 	}).subscribe(() => {});
@@ -147,79 +150,46 @@ export function createViewer(props: CreateSVGViewerProps) {
 	});
 
 	function onMouseDown(event: SvelteEvent<MouseEvent, SVGElement>) {
+		if (!hasActionKeyPressed || get(disabled)) return;
+
 		const $viewerRef = get(viewerRef);
 		const $containerRef = get(containerRef);
 		const $position = get(position);
 
 		if (!$containerRef || !$viewerRef) return;
-		if (!hasActionKeyPressed) return;
 
 		const newOffset = getMousePosition(event, $viewerRef);
 
-		offset = {
-			x: newOffset.x - $position.x,
-			y: newOffset.y - $position.y,
-		};
-
+		offset = posSubtract(newOffset, $position);
 		hasPointerDown = true;
 
 		if (event.cancelable) event.preventDefault();
 	}
 
 	function onMouseMove(event: SvelteEvent<MouseEvent, SVGElement>) {
+		if (!hasActionKeyPressed || get(disabled)) return;
+
 		const $viewerRef = get(viewerRef);
 		const $containerRef = get(containerRef);
 		const $isMoving = get(isMoving);
 
-		if (
-			!$containerRef ||
-			!$viewerRef ||
-			!hasActionKeyPressed ||
-			(!hasPointerDown && !$isMoving)
-		)
+		if (!$containerRef || !$viewerRef || (!hasPointerDown && !$isMoving))
 			return;
 
-		if (!$isMoving) {
-			isMoving.set(true);
-			hasPointerDown = false;
-		}
+		const cursorPos = getMousePosition(event, $viewerRef);
 
-		const newPosition = getMousePosition(event, $viewerRef);
-
-		const newX = newPosition.x - offset.x;
-		const newY = newPosition.y - offset.y;
-
-		panTo(newX, newY);
-
-		if (get(lockToBoundaries) && get(dragBehavior) === "borderReset") {
-			const $position = get(position);
-			const containerRect = $containerRef.getBoundingClientRect();
-			const viewerRect = $viewerRef.getBoundingClientRect();
-
-			if (newX > 0 || newX < -(containerRect.width - viewerRect.width)) {
-				offset.x = newPosition.x - $position.x;
-			}
-
-			if (
-				newY > 0 ||
-				newY < -(containerRect.height - viewerRect.height)
-			) {
-				offset.y = newPosition.y - $position.y;
-			}
-		}
-
-		if (event.cancelable) event.preventDefault();
+		onMove(event, $viewerRef, $containerRef, cursorPos);
 	}
 
 	function onMouseUp(_event: SvelteEvent<MouseEvent, SVGElement>) {
+		if (!hasActionKeyPressed || get(disabled)) return;
+
 		const $viewerRef = get(viewerRef);
 		const $containerRef = get(containerRef);
 
 		if (!$containerRef || !$viewerRef) return;
 
-		isMoving.set(false);
-		hasPointerDown = false;
-		offset = { x: 0, y: 0 };
+		onPointerUp();
 	}
 
 	function onWheel(event: SvelteEvent<WheelEvent, SVGElement>) {
@@ -242,6 +212,8 @@ export function createViewer(props: CreateSVGViewerProps) {
 	}
 
 	function onTouchStart(event: SvelteEvent<TouchEvent, SVGElement>) {
+		if (get(disabled)) return;
+
 		const $viewerRef = get(viewerRef);
 		const $containerRef = get(containerRef);
 		const $position = get(position);
@@ -252,77 +224,75 @@ export function createViewer(props: CreateSVGViewerProps) {
 		if (isPinchGesture(event)) {
 			if ($isMoving) isMoving.set(false);
 
-			const [touch1, touch2] = [event.touches[0], event.touches[1]];
-
-			const touch1Pos = { x: touch1.clientX, y: touch1.clientY };
-			const touch2Pos = { x: touch2.clientX, y: touch2.clientY };
-
+			const { touch1Pos, touch2Pos } = getPinchPosition(event);
 			lastDistance = getPinchDistance(touch1Pos, touch2Pos);
 			lastCenter = getPinchCenter(touch1Pos, touch2Pos);
 
-			if (get(pinchBehavior) == "zoomDrag") {
-				const newOffset = getPinchCenter(touch1Pos, touch2Pos);
-
-				offset = {
-					x: newOffset.x - $position.x,
-					y: newOffset.y - $position.y,
-				};
+			if (get(pinchBehavior) === "zoomDrag") {
+				offset = posSubtract(lastCenter, $position);
 			}
 
 			if (event.cancelable) event.preventDefault();
 		} else {
-			const newOffset = getTouchPosition(event, $viewerRef);
-
-			offset = {
-				x: newOffset.x - $position.x,
-				y: newOffset.y - $position.y,
-			};
+			offset = posSubtract(
+				getTouchPosition(event, $viewerRef),
+				$position,
+			);
 		}
 
 		hasPointerDown = true;
 	}
 
 	function onTouchMove(event: SvelteEvent<TouchEvent, SVGElement>) {
+		if (get(disabled)) return;
+
 		const $viewerRef = get(viewerRef);
 		const $containerRef = get(containerRef);
-		const $isMoving = get(isMoving);
 
 		if (!$containerRef || !$viewerRef) return;
-
 		if (isPinchGesture(event)) {
-			onPinchMove(event);
-			return;
+			return void onPinchMove(event);
 		}
+
+		const touchPos = getTouchPosition(event, $viewerRef);
+
+		onMove(event, $viewerRef, $containerRef, touchPos);
+	}
+
+	function onMove(
+		event: SvelteEvent<TouchEvent | MouseEvent, SVGElement>,
+		viewerRef: SVGSVGElement,
+		containerRef: SVGGElement,
+		pointerPosition: Position,
+	) {
+		const $isMoving = get(isMoving);
 
 		if (!$isMoving) {
 			isMoving.set(true);
 			hasPointerDown = false;
 		}
 
-		const newPosition = getTouchPosition(event, $viewerRef);
+		const newPosition = posSubtract(pointerPosition, offset);
 
-		const newX = newPosition.x - offset.x;
-		const newY = newPosition.y - offset.y;
-
-		panTo(newX, newY);
+		panTo(newPosition.x, newPosition.y);
 
 		if (get(lockToBoundaries) && get(dragBehavior) === "borderReset") {
 			const $position = get(position);
-			const containerRect = $containerRef.getBoundingClientRect();
-			const viewerRect = $viewerRef.getBoundingClientRect();
+			const containerRect = containerRef.getBoundingClientRect();
+			const viewerRect = viewerRef.getBoundingClientRect();
 
 			if (
-				newX == 0 ||
-				newX == -(containerRect.width - viewerRect.width)
+				newPosition.x > 0 ||
+				newPosition.x < -(containerRect.width - viewerRect.width)
 			) {
-				offset.x = newPosition.x - $position.x;
+				offset.x = pointerPosition.x - $position.x;
 			}
 
 			if (
-				newY == 0 ||
-				newY == -(containerRect.height - viewerRect.height)
+				newPosition.y > 0 ||
+				newPosition.y < -(containerRect.height - viewerRect.height)
 			) {
-				offset.y = newPosition.y - $position.y;
+				offset.y = pointerPosition.y - $position.y;
 			}
 		}
 
@@ -336,27 +306,22 @@ export function createViewer(props: CreateSVGViewerProps) {
 
 		if (!$containerRef || !$viewerRef || $isMoving) return;
 
-		const [touch1, touch2] = [event.touches[0], event.touches[1]];
-
-		const touch1Pos = { x: touch1.clientX, y: touch1.clientY };
-		const touch2Pos = { x: touch2.clientX, y: touch2.clientY };
-
-		const newCenter = getPinchCenter(touch1Pos, touch2Pos);
+		const { touch1Pos, touch2Pos } = getPinchPosition(event);
 		const distance = getPinchDistance(touch1Pos, touch2Pos);
+		const newCenter = getPinchCenter(touch1Pos, touch2Pos);
 
 		const $scale = get(scale);
-		const $pinchBehavior = get(pinchBehavior);
-
 		const newScale = $scale * (distance / lastDistance);
 
-		if ($scale === newScale) return;
+		if (Math.abs($scale - newScale) <= 0.0001) return;
 
-		const scaleDiff = newScale / $scale;
+		const $pinchBehavior = get(pinchBehavior);
 
-		// FIXME: when you start to zoom, position shifts unexpectedly
 		if ($pinchBehavior === "zoomDrag") {
-			let newX = scaleDiff * (newCenter.x - lastCenter.x);
-			let newY = scaleDiff * (newCenter.y - lastCenter.y);
+			const diff = posSubtract(newCenter, lastCenter);
+			const scaleDiff = newScale / $scale;
+			const newX = diff.x * scaleDiff;
+			const newY = diff.y * scaleDiff;
 
 			zoom(newCenter.x, newCenter.y, newScale);
 			pan(newX, newY);
@@ -366,38 +331,43 @@ export function createViewer(props: CreateSVGViewerProps) {
 
 		lastDistance = distance;
 		lastCenter = newCenter;
+
+		if (event.cancelable) event.preventDefault();
 	}
 
 	function onTouchEnd(event: SvelteEvent<TouchEvent, SVGElement>) {
+		if (get(disabled)) return;
+
 		const $containerRef = get(containerRef);
 		const $viewerRef = get(viewerRef);
 
 		if (!$containerRef || !$viewerRef) return;
 
-		if (event.touches.length == 1) {
+		if (event.touches.length === 1) {
 			lastDistance = 0;
 			lastCenter = { x: 0, y: 0 };
 
 			const newOffset = getTouchPosition(event, $viewerRef);
 			const $position = get(position);
 
-			offset = {
-				x: newOffset.x - $position.x,
-				y: newOffset.y - $position.y,
-			};
+			offset = posSubtract(newOffset, $position);
 
 			event.preventDefault();
 		} else {
-			isMoving.set(false);
-			hasPointerDown = false;
-			offset = { x: 0, y: 0 };
+			onPointerUp();
 		}
+	}
+
+	function onPointerUp() {
+		isMoving.set(false);
+		hasPointerDown = false;
+		offset = { x: 0, y: 0 };
 	}
 
 	function onKeyDown(e: SvelteEvent<KeyboardEvent, Window>) {
 		const $actionKey = get(actionKey);
 
-		if (e.repeat || hasActionKeyPressed) return;
+		if (!$actionKey || e.repeat || hasActionKeyPressed) return;
 
 		if ($actionKey === e.key) hasActionKeyPressed = true;
 	}
@@ -405,7 +375,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 	function onKeyUp(e: SvelteEvent<KeyboardEvent, Window>) {
 		const $actionKey = get(actionKey);
 
-		if (!hasActionKeyPressed) return;
+		if (!$actionKey || !hasActionKeyPressed) return;
 
 		if ($actionKey === e.key) hasActionKeyPressed = false;
 	}
@@ -655,6 +625,7 @@ export function createViewer(props: CreateSVGViewerProps) {
 			scale,
 			lockToBoundaries,
 			isMoving,
+			disabled,
 			pinchBehavior,
 		},
 		listeners: {

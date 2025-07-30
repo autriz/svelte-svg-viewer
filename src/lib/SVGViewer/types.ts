@@ -28,6 +28,8 @@ export type Props = {
 	 *
 	 * **Note: scale changes respect `lockToBoundaries` prop**
 	 *
+	 * **Warning: setting higher `maxScale` than default can lead to performance issues (Chromium-based phone browsers are affected the most).**
+	 *
 	 * @example
 	 * ```svelte
 	 * <script>
@@ -199,6 +201,28 @@ export type Props = {
 	 * @default undefined
 	 */
 	actionKey?: CreateSVGViewerProps["actionKey"] & {};
+	/**
+	 * Disables touch/mouse interactions.
+	 *
+	 * @example
+	 * ```svelte
+	 * <script>
+	 * 	import { writable } from "svelte/store";
+	 * 	import { SVGViewer } from "svelte-svg-viewer";
+	 *
+	 * 	let disabled = writable(true);
+	 * 	// or
+	 * 	let disabled = true;
+	 * </script>
+	 *
+	 * <SVGViewer {disabled}>
+	 * 	...
+	 * </SVGViewer>
+	 * ```
+	 *
+	 * @default undefined
+	 */
+	disabled?: CreateSVGViewerProps["disabled"] & {};
 	/**
 	 * Value for pinch behavior.
 	 *

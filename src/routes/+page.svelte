@@ -35,15 +35,23 @@
 	let lockToBoundaries = writable(true);
 	let scale = writable(1);
 
-	$: outOfBounds =
-		$position.x > 1 ||
-		$position.x < -containerRect?.width * $scale ||
-		$position.x - viewerRect?.width <
-			-(containerRect?.width * $scale) - 1 ||
-		$position.y > 1 ||
-		$position.y < -(containerRect?.height * $scale) ||
-		$position.y - viewerRect?.height <
-			-(containerRect?.height * $scale) - 1;
+	$: scaledWidth = containerRect?.width * $scale;
+	$: scaledHeight = containerRect?.height * $scale;
+
+	$: outOfBounds = (() => {
+		if (!containerRect || !viewerRect) return false;
+
+		const outOfBoundsX =
+			$position.x > 0 ||
+			$position.x < -scaledWidth ||
+			$position.x - viewerRect.width < -scaledWidth - 1;
+		const outOfBoundsY =
+			$position.y > 0 ||
+			$position.y < -scaledHeight ||
+			$position.y - viewerRect.height < -scaledHeight - 1;
+
+		return outOfBoundsX || outOfBoundsY;
+	})();
 
 	onMount(() => {
 		mounted = true;
@@ -53,20 +61,20 @@
 </script>
 
 <SVGViewer
-	width="100vw"
-	height="100vh"
-	maxScale={5}
+	width="100lvw"
+	height="100lvh"
+	maxScale={1.3}
 	{lockToBoundaries}
 	{scale}
 	{position}
-	svgClass="fill-transparent"
+	class="fill-transparent"
 	pinchBehavior="zoomDrag"
 	afterMount={(methods) => methods.center()}
 	bind:containerRect
 	bind:viewerRect
 	bind:methods
 >
-	<foreignObject width="140vw" height="140vh">
+	<foreignObject width="140lvw" height="140lvh">
 		<div class="h-full w-full">
 			<div
 				id="hero"
@@ -98,12 +106,16 @@
 				</div>
 				<div class="flex grow flex-col items-center justify-center">
 					{#if mounted}
-						<p in:fade={{ duration: isFirstTimeLoad ? 2000 : 0 }}>
+						<p
+							in:fade={{
+								duration: isFirstTimeLoad ? 2000 : 0,
+							}}
+						>
 							Try to zoom and drag around :)
 						</p>
 					{/if}
 				</div>
-				<footer class="z-10 flex flex-row gap-4">
+				<footer class="z-10 mb-16 flex flex-row gap-4">
 					<ThemeToggleButton />
 				</footer>
 			</div>
@@ -189,31 +201,12 @@
 		background:
 			linear-gradient(-90deg, #6d6d6d25 1px, transparent 0),
 			linear-gradient(#6d6d6d25 1px, transparent 0),
-			linear-gradient(-90deg, #6d6d6d25 1px, transparent 0),
-			linear-gradient(#6d6d6d25 1px, transparent 0),
-			linear-gradient(
-				transparent 6px,
-				transparent 0,
-				transparent 156px,
-				transparent 0
-			),
-			linear-gradient(-90deg, #6d6d6d25 1px, transparent 0),
-			linear-gradient(
-				-90deg,
-				transparent 6px,
-				transparent 0,
-				transparent 156px,
-				transparent 0
-			),
-			linear-gradient(#6d6d6d25 1px, transparent 0),
+			linear-gradient(-90deg, #6d6d6d50 1px, transparent 0),
+			linear-gradient(#6d6d6d50 1px, transparent 0),
 			0 0;
 		background-size:
 			32px 32px,
 			32px 32px,
-			256px 256px,
-			256px 256px,
-			256px 256px,
-			256px 256px,
 			256px 256px,
 			256px 256px;
 	}

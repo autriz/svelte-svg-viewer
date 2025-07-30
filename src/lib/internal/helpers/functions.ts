@@ -60,10 +60,10 @@ export function getPinchDistance(
 	touch1Pos: Position,
 	touch2Pos: Position,
 ): number {
-	return Math.sqrt(
-		Math.pow(touch2Pos.x - touch1Pos.x, 2) +
-			Math.pow(touch2Pos.y - touch1Pos.y, 2),
-	);
+	const dx = touch2Pos.x - touch1Pos.x;
+	const dy = touch2Pos.y - touch1Pos.y;
+
+	return Math.sqrt(dx * dx + dy * dy);
 }
 
 /**
@@ -74,4 +74,24 @@ export function isPinchGesture(
 	event: SvelteEvent<TouchEvent, SVGElement>,
 ): boolean {
 	return event.touches.length > 1;
+}
+
+export function posSubtract(a: Position, b: Position): Position {
+	return { x: a.x - b.x, y: a.y - b.y };
+}
+
+/**
+ * Returns position of two touches (a pinch)
+ * @param event A touch event
+ * @param element A SVG element
+ */
+export function getPinchPosition(event: SvelteEvent<TouchEvent, SVGElement>) {
+	const [touch1, touch2] = [event.touches[0], event.touches[1]];
+	const touch1Pos = { x: touch1.clientX, y: touch1.clientY };
+	const touch2Pos = { x: touch2.clientX, y: touch2.clientY };
+
+	return {
+		touch1Pos,
+		touch2Pos,
+	};
 }
